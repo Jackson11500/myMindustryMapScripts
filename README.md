@@ -1,0 +1,2 @@
+# myMindustryMapScripts
+存放mindustry的地图脚本
