@@ -148,7 +148,7 @@ fun Player.upgrade(u: UnitType){
             }
             apply(StatusEffects.electrified, Float.MAX_VALUE)
             apply(StatusEffects.sapped, Float.MAX_VALUE)
-            if (type == UnitTypes.mega)
+            if (type == UnitTypes.mega || type == UnitTypes.obviate)
                 apply(StatusEffects.muddy, Float.MAX_VALUE)
         }
         apply(StatusEffects.invincible, 4f * 60)
@@ -605,7 +605,7 @@ onEnable {
 
         unitType = UnitTypes.mega
         registerMapRule(unitType::itemCapacity) { T4ItemCap }
-        registerMapRule(unitType::health) { 600f }
+        registerMapRule(unitType::health) { 480f }
         registerMapRule(unitType::armor) { 0f }
         registerMapRule(unitType.weapons.get(0).bullet::buildingDamageMultiplier) { 1.5f }
         registerMapRule(unitType.weapons.get(2).bullet::buildingDamageMultiplier) { 1.5f }
@@ -632,7 +632,7 @@ onEnable {
         unitType = UnitTypes.obviate
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType::health) { 1000f }
+        registerMapRule(unitType::health) { 700f }
 
         unitType = UnitTypes.sei
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
