@@ -148,6 +148,8 @@ fun Player.upgrade(u: UnitType){
             }
             apply(StatusEffects.electrified, Float.MAX_VALUE)
             apply(StatusEffects.sapped, Float.MAX_VALUE)
+            if (type == UnitTypes.mega)
+                apply(StatusEffects.muddy, Float.MAX_VALUE)
         }
         apply(StatusEffects.invincible, 4f * 60)
         shield = maxShield()
@@ -617,7 +619,10 @@ onEnable {
         registerMapRule(unitType::legCount) { 0 }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::itemCapacity) { Int.MAX_VALUE }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 70f }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 110f }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::lifetime) { 2.4f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::health) { 60f }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::rotateSpeed) { 5f }
         registerMapRule(unitType::health) { 600f }
         registerMapRule(unitType::armor) { 0f }
 
@@ -662,13 +667,21 @@ onEnable {
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::armor) { 0f }
         registerMapRule(unitType::health) { 800f }
+        registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.slow }
+        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 2f * 60 }
+        registerMapRule(unitType.weapons.get(1)::shootStatus) { StatusEffects.slow }
+        registerMapRule(unitType.weapons.get(1)::shootStatusDuration) { 2f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 30f }
 
         unitType = UnitTypes.quell
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::itemCapacity) { Int.MAX_VALUE }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 180f }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::status) { StatusEffects.corroded }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::statusDuration) { 15f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 320f }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::lifetime) { 2.4f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::health) { 90f }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::rotateSpeed) { 5f }
+        registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.slow }
+        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 3f * 60 }
         registerMapRule(unitType::armor) { 0f }
         registerMapRule(unitType::health) { 1000f }
 
