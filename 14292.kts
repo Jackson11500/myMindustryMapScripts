@@ -559,6 +559,10 @@ onEnable {
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::health) { 280f }
         registerMapRule(unitType.weapons.get(0).bullet::collidesAir) { true }
+        registerMapRule(unitType.weapons.get(0).bullet::damage) { 17f }
+        registerMapRule(unitType.weapons.get(0).bullet::buildingDamageMultiplier) { 0.7f }
+        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 1.5f * 60 }
+        registerMapRule(unitType.weapons.get(2).bullet::damage) { 6f }
         registerMapRule(unitType::armor) { 0f }
 
         unitType = UnitTypes.locus
