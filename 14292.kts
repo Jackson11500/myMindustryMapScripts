@@ -504,8 +504,8 @@ suspend fun Player.infoMenu() {
     }
 }
 
-val copperToCoreHealth by lazy { state.rules.tags.getInt("@copperToCoreHealth", 7) }
-val copperToUnitHealth by lazy { state.rules.tags.getInt("@copperToUnitHealth", 3) }
+val copperToCoreHealth by lazy { state.rules.tags.getInt("@copperToCoreHealth", 8) }
+val copperToUnitHealth by lazy { state.rules.tags.getInt("@copperToUnitHealth", 4) }
 onEnable {
     contextScript<coreMindustry.UtilMapRule>().apply {
         //核心属性
@@ -537,7 +537,7 @@ onEnable {
         registerMapRule(unitType.weapons.get(0).bullet::collidesAir) { true }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.corroded }
         registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 4f * 60 }
-        registerMapRule(unitType::health) { 260f }
+        registerMapRule(unitType::health) { 180f }
         registerMapRule(unitType::armor) { 0f }
 
 
@@ -557,7 +557,7 @@ onEnable {
         unitType = UnitTypes.oxynoe
         registerMapRule(unitType::itemCapacity) { T3ItemCap }
         registerMapRule(unitType::flying) { true }
-        registerMapRule(unitType::health) { 320f }
+        registerMapRule(unitType::health) { 280f }
         registerMapRule(unitType.weapons.get(0).bullet::collidesAir) { true }
         registerMapRule(unitType::armor) { 0f }
 
@@ -605,12 +605,12 @@ onEnable {
 
         unitType = UnitTypes.mega
         registerMapRule(unitType::itemCapacity) { T4ItemCap }
-        registerMapRule(unitType::health) { 480f }
+        registerMapRule(unitType::health) { 440f }
         registerMapRule(unitType::armor) { 0f }
         registerMapRule(unitType.weapons.get(0).bullet::buildingDamageMultiplier) { 1.5f }
         registerMapRule(unitType.weapons.get(2).bullet::buildingDamageMultiplier) { 1.5f }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.corroded }
-        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 3f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 1.5f * 60 }
         registerMapRule(unitType.weapons.get(2).bullet::status) { StatusEffects.corroded }
         registerMapRule(unitType.weapons.get(2).bullet::statusDuration) { 1f * 60 }
 
@@ -632,13 +632,13 @@ onEnable {
         unitType = UnitTypes.obviate
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType::health) { 700f }
+        registerMapRule(unitType::health) { 680f }
 
         unitType = UnitTypes.sei
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType::health) { 800f }
+        registerMapRule(unitType::health) { 860f }
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 15f }
         registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 7f }
         registerMapRule(unitType.weapons.get(1).bullet::damage) { 24f }
@@ -655,7 +655,7 @@ onEnable {
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::armor) { 10f }
-        registerMapRule(unitType::health) { 1200f }
+        registerMapRule(unitType::health) { 1400f }
         registerMapRule(unitType.weapons.get(0)::rotateSpeed) { Float.MAX_VALUE }
         registerMapRule(unitType.weapons.get(0).bullet.fragBullet::splashDamage) { 7f }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.sporeSlowed }
@@ -676,14 +676,14 @@ onEnable {
         unitType = UnitTypes.quell
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::itemCapacity) { Int.MAX_VALUE }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 320f }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 240f }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::lifetime) { 2.4f * 60 }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::health) { 90f }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::rotateSpeed) { 5f }
-        registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.slow }
-        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 3f * 60 }
+        registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.slow }
+        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 3f * 60 }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType::health) { 1000f }
+        registerMapRule(unitType::health) { 960f }
 
 
         //T6
@@ -698,9 +698,9 @@ onEnable {
         registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 4f * 60 }
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 300f }
         registerMapRule(unitType.weapons.get(0).bullet::spawnUnit) { (Blocks.scathe as ItemTurret).ammoTypes[Items.carbide].spawnUnit }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 1000f }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 750f }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::status) { StatusEffects.corroded }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::statusDuration) { 20f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::statusDuration) { 15f * 60 }
         registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 60f }
         registerMapRule(unitType.weapons.get(0).bullet::splashDamageRadius) { 80f }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.slow }
@@ -713,16 +713,16 @@ onEnable {
         registerMapRule(unitType::health) { 2800f }
         registerMapRule(unitType.weapons.get(2).bullet::splashDamage) { 25f }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.corroded }
-        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 10f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 5f * 60 }
 
         unitType = UnitTypes.conquer
         registerMapRule(unitType::itemCapacity) { T6ItemCap }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::armor) { 15f }
-        registerMapRule(unitType::health) { 2800f }
+        registerMapRule(unitType::health) { 3200f }
         registerMapRule(unitType.weapons.get(0)::rotateSpeed) { Float.MAX_VALUE }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.sporeSlowed }
-        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 3.2f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 4.8f * 60 }
 
         unitType = UnitTypes.collaris
         registerMapRule(unitType::itemCapacity) { T6ItemCap }
@@ -731,7 +731,7 @@ onEnable {
         registerMapRule(unitType::armor) { 0f }
         registerMapRule(unitType::health) { 1800f }
         registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.unmoving }
-        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 5f * 60 }
+        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 4f * 60 }
 
     }
     Vars.state.rules.apply{
