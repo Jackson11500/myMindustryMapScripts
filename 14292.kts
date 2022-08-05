@@ -26,6 +26,7 @@ import mindustry.world.blocks.defense.turrets.ItemTurret
 import mindustry.world.blocks.storage.CoreBlock
 import mindustry.world.blocks.storage.CoreBlock.CoreBuild
 import kotlin.math.ceil
+import kotlin.math.log10
 import kotlin.random.Random
 
 val menu = contextScript<coreMindustry.UtilNext>()
@@ -33,8 +34,28 @@ val menu = contextScript<coreMindustry.UtilNext>()
 /**@author xkldklp*/
 
 val playerMoney: ObjectIntMap<String> = ObjectIntMap()//个人贡献点
-val teamMoney: ObjectMap<Team,Int> = ObjectMap()//团队资源点
-val lastUnitType: ObjectMap<String,UnitType> = ObjectMap()//死前用的单位 还原所需要贡献点为单位容量*1.5
+val cooldown: ObjectIntMap<String> = ObjectIntMap()//上交冷却
+val teamMoney: ObjectMap<Team, Int> = ObjectMap()//团队资源点
+val lastUnitType: ObjectMap<String, UnitType> = ObjectMap()//死前用的单位 还原所需要贡献点为单位容量*1.5
+
+val copperToCoreHealth by lazy { Vars.state.rules.tags.getInt("@copperToCoreHealth", 8) }
+val copperToUnitHealth by lazy { Vars.state.rules.tags.getInt("@copperToUnitHealth", 4) }
+val oreGrowSpeed by lazy { Vars.state.rules.tags.getInt("@oreGrowSpeed", 16) }
+val oreCostIncreaseTime = Vars.state.rules.tags.getInt("@oreCostIncreaseTime", 480) * 1000f
+
+val T1ItemCap by lazy { Vars.state.rules.tags.getInt("@T1ItemCap", 30) }
+val T2ItemCap by lazy { Vars.state.rules.tags.getInt("@T2ItemCap", 60) }
+val T3ItemCap by lazy { Vars.state.rules.tags.getInt("@T3ItemCap", 120) }
+val T4ItemCap by lazy { Vars.state.rules.tags.getInt("@T4ItemCap", 480) }
+val T5ItemCap by lazy { Vars.state.rules.tags.getInt("@T5ItemCap", 1440) }
+val T6ItemCap by lazy { Vars.state.rules.tags.getInt("@T6ItemCap", 2880) }
+
+val startTeamMoney by lazy { Vars.state.rules.tags.getInt("@startTeamMoney", 250) }
+val T2BaseNeed by lazy { Vars.state.rules.tags.getInt("@T2BaseNeed", 2400) }
+val T3BaseNeed by lazy { Vars.state.rules.tags.getInt("@T3BaseNeed", 7200) }
+val T4BaseNeed by lazy { Vars.state.rules.tags.getInt("@T4BaseNeed", 16800) }
+val MaxBaseNeed by lazy { Vars.state.rules.tags.getInt("@MaxBaseNeed", 32000) }
+
 val missile = arrayOf(
     UnitTypes.anthicus.weapons.get(0).bullet.spawnUnit,
     UnitTypes.quell.weapons.get(0).bullet.spawnUnit,
@@ -73,18 +94,21 @@ val Tier6units = arrayOf(
     UnitTypes.conquer,
     UnitTypes.collaris
 )
-val T1ItemCap = 30
-val T2ItemCap = 60
-val T3ItemCap = 120
-val T4ItemCap = 480
-val T5ItemCap = 1440
-val T6ItemCap = 2000
 
+val startTime by lazy { Time.millis() }
+
+fun Player.checkCooldown(): Boolean{
+    return cooldown.get(uuid()) <= Time.timeSinceMillis(startTime)
+}
+fun Player.setCooldown(time: Float){
+    cooldown.put(uuid(), (Time.timeSinceMillis(startTime) + time * 1000).toInt())
+}
 fun Player.addMoney(amount: Int){
+    setCooldown((Math.pow(log10(amount.toDouble()), 4.00) / 2).toFloat())
     playerMoney.put(uuid(), playerMoney.get(uuid()) + amount)
     teamMoney.put(team(), teamMoney.get(team()) + amount)
-    if(teamMoney.get(team()) <= 32000) return
-    teamMoney.put(team(), 32000)
+    if (teamMoney.get(team()) <= MaxBaseNeed) return
+    teamMoney.put(team(), MaxBaseNeed)
     playerMoney.put(uuid(), playerMoney.get(uuid()) + amount)
 }
 fun Player.removeMoney(amount: Int){
@@ -94,8 +118,7 @@ fun Player.getMoney(): Int {
     return playerMoney.get(uuid())
 }
 fun Player.checkMoney(amount: Int): Boolean {
-    if(playerMoney.get(uuid()) >= amount) return true
-    return false
+    return playerMoney.get(uuid()) >= amount
 }
 
 fun mindustry.gen.Unit.maxShield(): Float{
@@ -103,7 +126,7 @@ fun mindustry.gen.Unit.maxShield(): Float{
 }
 
 fun itemDrop(amount: Int, x :Float, y :Float, maxRange: Float = 16f){
-    if(amount == 0) return
+    if (amount == 0) return
     var dorpAmount = amount
     val dropX = x - maxRange / 2 + Random.nextFloat() * maxRange
     val dropY = y - maxRange / 2 + Random.nextFloat() * maxRange
@@ -111,7 +134,7 @@ fun itemDrop(amount: Int, x :Float, y :Float, maxRange: Float = 16f){
     launch(Dispatchers.game){
         while(true){
             delay(200)
-            if(Time.millis() - dorpTime >= 30_000) break
+            if (Time.millis() - dorpTime >= 30_000) break
             val units = buildList {
                 Units.nearby(null, dropX, dropY, 54 * 8f) {
                     add(it)
@@ -119,8 +142,8 @@ fun itemDrop(amount: Int, x :Float, y :Float, maxRange: Float = 16f){
             }
             if (units.isEmpty()) continue
             units.forEach{
-                if(it.within(dropX, dropY, it.hitSize + 4) && it.stack.amount < it.itemCapacity()){
-                    if(it.stack.amount + dorpAmount > it.itemCapacity()) {
+                if (it.within(dropX, dropY, it.hitSize + 4) && it.stack.amount < it.itemCapacity()){
+                    if (it.stack.amount + dorpAmount > it.itemCapacity()) {
                         dorpAmount -= it.itemCapacity() - it.stack.amount
                         it.addItem(Items.copper, it.itemCapacity())
                     }else{
@@ -142,7 +165,7 @@ fun Player.upgrade(u: UnitType){
     val unit = unit()
     unit(u.spawn(team(), unit).apply {
         spawnedByCore = true
-        if(!(u in Tier6units)) {
+        if (!(u in Tier6units)) {
             if (type != UnitTypes.horizon && type != UnitTypes.locus && type != UnitTypes.precept && type != UnitTypes.vanquish && type != UnitTypes.conquer) {
                 apply(StatusEffects.freezing, Float.MAX_VALUE)
             }
@@ -154,7 +177,7 @@ fun Player.upgrade(u: UnitType){
         apply(StatusEffects.invincible, 4f * 60)
         shield = maxShield()
     })
-    if(!(u in Tier6units)) lastUnitType.put(uuid(),u)
+    if (!(u in Tier6units)) lastUnitType.put(uuid(),u)
 }
 
 fun CoreBuild.upgrade(type: Block, text: String = ""){
@@ -165,7 +188,7 @@ fun CoreBuild.upgrade(type: Block, text: String = ""){
 }
 
 suspend fun Player.upgradeMenu() {
-    if(lastUnitType.get(uuid()) != null && unit().type == UnitTypes.flare && lastUnitType.get(uuid()) != UnitTypes.flare){
+    if (lastUnitType.get(uuid()) != null && unit().type == UnitTypes.flare && lastUnitType.get(uuid()) != UnitTypes.flare){
         menu.sendMenuBuilder<Unit>(
             this, 30_000, "是否还原${lastUnitType.get(uuid()).emoji()}？",
             """
@@ -180,7 +203,7 @@ suspend fun Player.upgradeMenu() {
             add(listOf(
                 "[green]是" to {
                     upgrade(lastUnitType.get(uuid()))
-                    if(checkMoney((lastUnitType.get(uuid()).itemCapacity * 1.5).toInt()))
+                    if (checkMoney((lastUnitType.get(uuid()).itemCapacity * 1.5).toInt()))
                         removeMoney((lastUnitType.get(uuid()).itemCapacity * 1.5).toInt())
                     else
                         lastUnitType.put(uuid(),UnitTypes.flare)
@@ -203,7 +226,7 @@ suspend fun Player.upgradeMenu() {
         """.trimIndent()
         ) {
             fun addUnitUpgrade(type: UnitType, needTeamMoney: Int = 0) {
-                if(unit().stack().amount < unit().itemCapacity() || teamMoney.get(team()) < needTeamMoney) return
+                if (unit().stack().amount < unit().itemCapacity() || teamMoney.get(team()) < needTeamMoney) return
                 val name = "升级为 ${type.emoji()}"
                 add(listOf(name to suspend {
                     if (unit().stack().amount < unit().itemCapacity())//打开菜单后可能又会不满足条件
@@ -230,98 +253,102 @@ suspend fun Player.upgradeMenu() {
                 }
                 //T3 -> T4
                 UnitTypes.minke -> {
-                    addUnitUpgrade(UnitTypes.bryde,2400)
-                    addUnitUpgrade(UnitTypes.cyerce,2400)
+                    addUnitUpgrade(UnitTypes.bryde, T2BaseNeed)
+                    addUnitUpgrade(UnitTypes.cyerce, T2BaseNeed)
                 }
                 UnitTypes.oxynoe -> {
-                    addUnitUpgrade(UnitTypes.cyerce,2400)
-                    addUnitUpgrade(UnitTypes.precept,2400)
-                    addUnitUpgrade(UnitTypes.mega,2400)
+                    addUnitUpgrade(UnitTypes.cyerce, T2BaseNeed)
+                    addUnitUpgrade(UnitTypes.precept, T2BaseNeed)
+                    addUnitUpgrade(UnitTypes.mega, T2BaseNeed)
                 }
                 UnitTypes.locus -> {
-                    addUnitUpgrade(UnitTypes.mega,2400)
-                    addUnitUpgrade(UnitTypes.anthicus,2400)
+                    addUnitUpgrade(UnitTypes.mega, T2BaseNeed)
+                    addUnitUpgrade(UnitTypes.anthicus, T2BaseNeed)
                 }
                 //T4 -> T5
                 UnitTypes.bryde -> {
-                    addUnitUpgrade(UnitTypes.obviate,7200)
-                    addUnitUpgrade(UnitTypes.sei,7200)
+                    addUnitUpgrade(UnitTypes.obviate, T3BaseNeed)
+                    addUnitUpgrade(UnitTypes.sei, T3BaseNeed)
                 }
                 UnitTypes.cyerce -> {
-                    addUnitUpgrade(UnitTypes.sei,7200)
-                    addUnitUpgrade(UnitTypes.antumbra,7200)
+                    addUnitUpgrade(UnitTypes.sei, T3BaseNeed)
+                    addUnitUpgrade(UnitTypes.antumbra, T3BaseNeed)
                 }
                 UnitTypes.precept -> {
-                    addUnitUpgrade(UnitTypes.antumbra,7200)
-                    addUnitUpgrade(UnitTypes.vanquish,7200)
+                    addUnitUpgrade(UnitTypes.antumbra, T3BaseNeed)
+                    addUnitUpgrade(UnitTypes.vanquish, T3BaseNeed)
                 }
                 UnitTypes.mega -> {
-                    addUnitUpgrade(UnitTypes.vanquish,7200)
-                    addUnitUpgrade(UnitTypes.tecta,7200)
+                    addUnitUpgrade(UnitTypes.vanquish, T3BaseNeed)
+                    addUnitUpgrade(UnitTypes.tecta, T3BaseNeed)
                 }
                 UnitTypes.anthicus -> {
-                    addUnitUpgrade(UnitTypes.tecta,7200)
-                    addUnitUpgrade(UnitTypes.quell,7200)
+                    addUnitUpgrade(UnitTypes.tecta, T3BaseNeed)
+                    addUnitUpgrade(UnitTypes.quell, T3BaseNeed)
                 }
                 //T5 -> T6
                 UnitTypes.obviate -> {
-                    addUnitUpgrade(UnitTypes.omura,16800)
-                    addUnitUpgrade(UnitTypes.eclipse,16800)
+                    addUnitUpgrade(UnitTypes.omura, T4BaseNeed)
+                    addUnitUpgrade(UnitTypes.eclipse, T4BaseNeed)
                 }
                 UnitTypes.sei -> {
-                    addUnitUpgrade(UnitTypes.omura,16800)
-                    addUnitUpgrade(UnitTypes.eclipse,16800)
+                    addUnitUpgrade(UnitTypes.omura, T4BaseNeed)
+                    addUnitUpgrade(UnitTypes.eclipse, T4BaseNeed)
                 }
                 UnitTypes.antumbra -> {
-                    addUnitUpgrade(UnitTypes.eclipse,16800)
-                    addUnitUpgrade(UnitTypes.conquer,16800)
+                    addUnitUpgrade(UnitTypes.eclipse, T4BaseNeed)
+                    addUnitUpgrade(UnitTypes.conquer, T4BaseNeed)
                 }
                 UnitTypes.vanquish -> {
-                    addUnitUpgrade(UnitTypes.eclipse,16800)
-                    addUnitUpgrade(UnitTypes.conquer,16800)
+                    addUnitUpgrade(UnitTypes.eclipse, T4BaseNeed)
+                    addUnitUpgrade(UnitTypes.conquer, T4BaseNeed)
                 }
                 UnitTypes.tecta -> {
-                    addUnitUpgrade(UnitTypes.conquer,16800)
-                    addUnitUpgrade(UnitTypes.collaris,16800)
+                    addUnitUpgrade(UnitTypes.conquer, T4BaseNeed)
+                    addUnitUpgrade(UnitTypes.collaris, T4BaseNeed)
                 }
                 UnitTypes.quell -> {
-                    addUnitUpgrade(UnitTypes.conquer,16800)
-                    addUnitUpgrade(UnitTypes.collaris,16800)
+                    addUnitUpgrade(UnitTypes.conquer, T4BaseNeed)
+                    addUnitUpgrade(UnitTypes.collaris, T4BaseNeed)
                 }
             }
-            if(unit().stack.amount != 0 && unit().within(core().x,core().y,Vars.itemTransferRange)) add(listOf(
-                "上交全部资源${unit().stack.amount}" to {
-                    addMoney(unit().stack.amount)
-                    unit().stack.amount = 0
-                },
-                "上交1/4资源${(unit().stack.amount / 4).toInt()}" to {
-                    addMoney((unit().stack.amount / 4).toInt())
-                    unit().stack.amount -= (unit().stack.amount / 4).toInt()
-                    upgradeMenu()
-                }
-            )) else if(unit().stack.amount != 0) add(listOf(
-                "远程上交全部资源(50%手续费)\n向下取整\n${unit().stack.amount}->${(unit().stack.amount / 2).toInt()}" to {
-                    addMoney((unit().stack.amount / 2).toInt())
-                    unit().stack.amount = 0
-                },
-                "上交1/4资源(50%手续费)\n向下取整\n${(unit().stack.amount / 4).toInt()}->${(unit().stack.amount / 8).toInt()}" to {
-                    addMoney((unit().stack.amount / 8).toInt())
-                    unit().stack.amount -= (unit().stack.amount / 4).toInt()
-                    upgradeMenu()
-                }
-            ))
-
+            if (checkCooldown()){
+                if (unit().stack.amount != 0 && unit().within(core().x,core().y,Vars.itemTransferRange)) add(listOf(
+                    "上交全部资源${unit().stack.amount}" to {
+                        addMoney(unit().stack.amount)
+                        unit().stack.amount = 0
+                    },
+                    "上交1/4资源${(unit().stack.amount / 4).toInt()}" to {
+                        addMoney((unit().stack.amount / 4).toInt())
+                        unit().stack.amount -= (unit().stack.amount / 4).toInt()
+                        upgradeMenu()
+                    }
+                )) else if (unit().stack.amount != 0) add(listOf(
+                    "远程上交全部资源(50%手续费)\n向下取整\n${unit().stack.amount}->${(unit().stack.amount / 2).toInt()}" to {
+                        addMoney((unit().stack.amount / 2).toInt())
+                        unit().stack.amount = 0
+                    },
+                    "上交1/4资源(50%手续费)\n向下取整\n${(unit().stack.amount / 4).toInt()}->${(unit().stack.amount / 8).toInt()}" to {
+                        addMoney((unit().stack.amount / 8).toInt())
+                        unit().stack.amount -= (unit().stack.amount / 4).toInt()
+                        upgradeMenu()
+                    }
+                ))
+            }else add(listOf("[red]上交CD中!\n[white]还有${(cooldown.get(uuid()) - Time.timeSinceMillis(startTime)) / 1000}s" to {upgradeMenu()}))
 
             add(listOf(
                 "取消" to {},
                 "buff商店" to {buffMenu()},
                 "单位详细属性" to {infoMenu()}
             ))
-            if(admin){
+            if (admin && Groups.player.size() <= 6){
                 //测试用
                 add(listOf(
                     "[red]<ADMIN>装填背包" to {unit().stack.amount = unit().itemCapacity()},
-                    "[red]<ADMIN>上交1k资源" to {addMoney(1000)}
+                    "[red]<ADMIN>上交1k资源" to {
+                        addMoney(1000)
+                        setCooldown(0f)
+                    }
                 ))
                 add(listOf(
                     "[red]<ADMIN>白做1k贡献" to {removeMoney(1000)},
@@ -333,7 +360,7 @@ suspend fun Player.upgradeMenu() {
 }
 
 suspend fun Player.buffMenu(){
-    if(unit().type in Tier6units){
+    if (unit().type in Tier6units){
         sendMessage("[red]Tier6单位无法购买buff")
         return
     }
@@ -369,7 +396,7 @@ suspend fun Player.buffMenu(){
                     if (!checkMoney(cost) && unit().stack.amount < cost)
                         sendMessage("[red]贡献点或矿物不足")
                     else {
-                        if(unit().stack.amount >= cost)
+                        if (unit().stack.amount >= cost)
                             unit().stack.amount -= cost
                         else
                             removeMoney(cost)
@@ -434,35 +461,35 @@ suspend fun Player.infoMenu() {
                     type.weapons.each {
                         appendLine(" ${it.name}")
                         appendLine("  ${it.reload / 60f}s 射击一次")
-                        if(it.shootStatus != StatusEffects.none)
+                        if (it.shootStatus != StatusEffects.none)
                             appendLine("  ${it.shootStatus.emoji()}${it.shootStatus}射击效果/${it.shootStatusDuration / 60f}s")
                         appendLine("   ${it.bullet.damage}伤害")
-                        if(it.bullet.splashDamage > 0) {
+                        if (it.bullet.splashDamage > 0) {
                             appendLine("   ${it.bullet.splashDamage}范围伤害")
                             appendLine("   ${it.bullet.splashDamageRadius}范围伤害范围")
                         }
-                        if(it.bullet.spawnUnit != null){
+                        if (it.bullet.spawnUnit != null){
                             appendLine("  ${it.bullet.spawnUnit.emoji()}${it.bullet.spawnUnit.weapons.get(0).bullet.splashDamage}导弹伤害")
-                            if(it.bullet.spawnUnit.weapons.get(0).bullet.status != StatusEffects.none)
+                            if (it.bullet.spawnUnit.weapons.get(0).bullet.status != StatusEffects.none)
                                 appendLine("   ${it.bullet.spawnUnit.weapons.get(0).bullet.status.emoji()}${it.bullet.spawnUnit.weapons.get(0).bullet.status}导弹效果/${it.bullet.spawnUnit.weapons.get(0).bullet.statusDuration / 60f}s")
                         }
-                        if(it.bullet.status != StatusEffects.none) {
+                        if (it.bullet.status != StatusEffects.none) {
                             appendLine("   ${it.bullet.status.emoji()}${it.bullet.status}子弹效果/${it.bullet.statusDuration / 60f}s")
                         }
-                        if(it.bullet.fragBullet != null){
+                        if (it.bullet.fragBullet != null){
                             appendLine("   ${it.bullet.fragBullets}个分裂子弹")
                             appendLine("    ${it.bullet.fragBullet.damage}伤害")
-                            if(it.bullet.fragBullet.splashDamage > 0) {
+                            if (it.bullet.fragBullet.splashDamage > 0) {
                                 appendLine("    ${it.bullet.fragBullet.splashDamage}范围伤害")
                                 appendLine("    ${it.bullet.fragBullet.splashDamageRadius}范围伤害范围")
                             }
                         }
                     }
-                    if(upgradeType1 != null)
+                    if (upgradeType1 != null)
                         appendLine("${type.emoji()} -> ${upgradeType1.emoji()}")
-                    if(upgradeType2 != null)
+                    if (upgradeType2 != null)
                         appendLine("${type.emoji()} -> ${upgradeType2.emoji()}")
-                    if(upgradeType3 != null)
+                    if (upgradeType3 != null)
                         appendLine("${type.emoji()} -> ${upgradeType3.emoji()}")
                 }
                 sendMessage(text)
@@ -504,8 +531,7 @@ suspend fun Player.infoMenu() {
     }
 }
 
-val copperToCoreHealth by lazy { state.rules.tags.getInt("@copperToCoreHealth", 8) }
-val copperToUnitHealth by lazy { state.rules.tags.getInt("@copperToUnitHealth", 4) }
+
 onEnable {
     contextScript<coreMindustry.UtilMapRule>().apply {
         //核心属性
@@ -531,6 +557,7 @@ onEnable {
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::health) { 140f }
         registerMapRule(unitType::armor) { 0f }
+        registerMapRule(unitType.weapons.get(0)::minShootVelocity) { 0f }
 
         unitType = UnitTypes.horizon
         registerMapRule(unitType::itemCapacity) { T2ItemCap }
@@ -579,12 +606,13 @@ onEnable {
         unitType = UnitTypes.bryde
         registerMapRule(unitType::itemCapacity) { T4ItemCap }
         registerMapRule(unitType::flying) { true }
-        registerMapRule(unitType::health) { 650f }
+        registerMapRule(unitType::health) { 600f }
         registerMapRule(unitType::armor) { 0f }
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 140f }
         registerMapRule(unitType.weapons.get(0).bullet::collidesAir) { true }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.corroded }
         registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 8f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet::buildingDamageMultiplier) { 0.5f }
         registerMapRule(unitType.weapons.get(2).bullet::buildingDamageMultiplier) { 0.5f }
 
         unitType = UnitTypes.cyerce
@@ -627,7 +655,7 @@ onEnable {
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::lifetime) { 2.4f * 60 }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::health) { 60f }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::rotateSpeed) { 5f }
-        registerMapRule(unitType::health) { 600f }
+        registerMapRule(unitType::health) { 550f }
         registerMapRule(unitType::armor) { 0f }
 
 
@@ -637,6 +665,9 @@ onEnable {
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType::armor) { 0f }
         registerMapRule(unitType::health) { 680f }
+        registerMapRule(unitType.weapons.get(0).bullet::damage) { 40f }
+        registerMapRule(unitType.weapons.get(0).bullet::lightningDamage) { 15f }
+        registerMapRule(unitType.weapons.get(0).bullet::buildingDamageMultiplier) { 2f }
 
         unitType = UnitTypes.sei
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
@@ -658,8 +689,8 @@ onEnable {
         unitType = UnitTypes.vanquish
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType::flying) { true }
-        registerMapRule(unitType::armor) { 10f }
-        registerMapRule(unitType::health) { 1400f }
+        registerMapRule(unitType::armor) { 12f }
+        registerMapRule(unitType::health) { 1500f }
         registerMapRule(unitType.weapons.get(0)::rotateSpeed) { Float.MAX_VALUE }
         registerMapRule(unitType.weapons.get(0).bullet.fragBullet::splashDamage) { 7f }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.sporeSlowed }
@@ -675,7 +706,7 @@ onEnable {
         registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 2f * 60 }
         registerMapRule(unitType.weapons.get(1)::shootStatus) { StatusEffects.slow }
         registerMapRule(unitType.weapons.get(1)::shootStatusDuration) { 2f * 60 }
-        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 30f }
+        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 35f }
 
         unitType = UnitTypes.quell
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
@@ -684,10 +715,10 @@ onEnable {
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::lifetime) { 2.4f * 60 }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::health) { 90f }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::rotateSpeed) { 5f }
-        registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.slow }
-        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 3f * 60 }
+        registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.unmoving }
+        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 2f * 60 }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType::health) { 960f }
+        registerMapRule(unitType::health) { 800f }
 
 
         //T6
@@ -696,13 +727,13 @@ onEnable {
         registerMapRule(unitType::itemCapacity) { T6ItemCap }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType::health) { 2400f }
+        registerMapRule(unitType::health) { 2200f }
         registerMapRule(unitType.weapons.get(0)::reload) { 4f * 60 }
         registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.electrified }
-        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 4f * 60 }
+        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 5f * 60 }
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 300f }
         registerMapRule(unitType.weapons.get(0).bullet::spawnUnit) { (Blocks.scathe as ItemTurret).ammoTypes[Items.carbide].spawnUnit }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 750f }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 650f }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::status) { StatusEffects.corroded }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::statusDuration) { 15f * 60 }
         registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 60f }
@@ -733,9 +764,9 @@ onEnable {
         registerMapRule(unitType::legCount) { 0 }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType::health) { 1800f }
+        registerMapRule(unitType::health) { 3000f }
         registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.unmoving }
-        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 4f * 60 }
+        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 3f * 60 }
 
     }
     Vars.state.rules.apply{
@@ -744,7 +775,7 @@ onEnable {
         bannedUnits.add(UnitTypes.flare)
     }
     Vars.state.teams.getActive().each{
-        teamMoney.put(it.team,250)
+        teamMoney.put(it.team, startTeamMoney)
         launch(Dispatchers.game){
             delay(5000L)
             it.core().health += 20000f
@@ -755,7 +786,7 @@ onEnable {
             var text = ""
             text += buildString {
                 val unit = p.unit() ?: return@buildString
-                if(unit.maxHealth <= 1) return@buildString//玩家即使不操控任何单位 也会有一个血量上限0.5的单位给玩家操控
+                if (unit.maxHealth <= 1) return@buildString//玩家即使不操控任何单位 也会有一个血量上限0.5的单位给玩家操控
                 appendLine("---${unit.type.emoji()}---[yellow]每个铜能恢复单位${copperToUnitHealth}点血量")
                 append("[green]$add")
                 repeat((unit.health / unit.maxHealth * 10).toInt()) {
@@ -779,19 +810,19 @@ onEnable {
                 val core = p.core() ?: return@buildString
                 appendLine("---${core.block.emoji()}---[yellow]每个资源点能恢复核心${copperToCoreHealth}点血量")
                 append("[cyan]核心资源点贮藏:${teamMoney.get(p.team())}")
-                if(p.checkMoney(1)) appendLine("   [cyan]个人贡献点:${p.getMoney()}[purple]") else appendLine("[purple]")
+                if (p.checkMoney(1)) appendLine("   [cyan]个人贡献点:${p.getMoney()}[purple]") else appendLine("[purple]")
                 when (core.block) {
-                    Blocks.coreShard -> appendLine("核心等级:1(单位Tier 3) 下一级所需资源点：2400")
-                    Blocks.coreFoundation -> appendLine("核心等级:2(单位Tier 4) 下一级所需资源点：7200")
+                    Blocks.coreShard -> appendLine("核心等级:1(单位Tier 3) 下一级所需资源点：$T2BaseNeed")
+                    Blocks.coreFoundation -> appendLine("核心等级:2(单位Tier 4) 下一级所需资源点：$T3BaseNeed")
                     Blocks.coreNucleus ->
-                        if (teamMoney.get(p.team()) <= 16800) appendLine("核心等级:3(单位Tier 5) 下一级所需资源点：16800") else appendLine("核心等级:4(单位Tier 6) 已经满级")
+                        if (teamMoney.get(p.team()) <= T4BaseNeed) appendLine("核心等级:3(单位Tier 5) 下一级所需资源点：$T4BaseNeed") else appendLine("核心等级:4(单位Tier 6) 已经满级")
                 }
             }
             text += buildString {
                 state.teams.getActive().joinToString("\n") {
                     val core = it.core() ?: return@joinToString ""
                     append("[#${it.team.color}]${it.team.name}[white]${core.block.emoji()}   ${teamMoney.get(it.team)}")
-                    if(teamMoney.get(it.team) <= 16800) appendLine("") else appendLine("   [gold]TIER6允许升级")
+                    if (teamMoney.get(it.team) <=  T4BaseNeed) appendLine("") else appendLine("   [gold]TIER6允许升级")
                 }
                 append("[red]STARBLAST破烂平衡测试中")
             }
@@ -819,16 +850,16 @@ onEnable {
             }
             //核心附近的flare无敌
             val core = it.core() ?: return@each
-            if(it.type == UnitTypes.flare && it.within(core.x, core.y, core.hitSize()))
-                it.apply(StatusEffects.invincible, 1f * 60)
+            if (it.type == UnitTypes.flare && it.within(core.x, core.y, core.hitSize() * 1.5f))
+                it.apply(StatusEffects.invincible, 5f * 60)
         }
         Groups.bullet.each{
             //子弹边界穿梭
             val vel = it.vel
-            if(it.x / 8 >= Vars.world.width() - 1) it.set(8f,it.y)
-            if(it.x / 8 <= 0) it.set(Vars.world.width() * 8f - 8,it.y)
-            if(it.y / 8 >= Vars.world.height() - 1) it.set(it.x,8f)
-            if(it.y / 8 <= 0) it.set(it.x,Vars.world.height() * 8f - 8)
+            if (it.x / 8 >= Vars.world.width() - 1) it.set(8f,it.y)
+            if (it.x / 8 <= 0) it.set(Vars.world.width() * 8f - 8,it.y)
+            if (it.y / 8 >= Vars.world.height() - 1) it.set(it.x,8f)
+            if (it.y / 8 <= 0) it.set(it.x,Vars.world.height() * 8f - 8)
             it.vel = vel
         }
         state.teams.getActive().each { data ->
@@ -836,25 +867,25 @@ onEnable {
             //核心升降级
             when (core.block) {
                 Blocks.coreShard ->
-                    if(teamMoney.get(data.team) >= 2400)
+                    if (teamMoney.get(data.team) >= T2BaseNeed)
                         core.upgrade(Blocks.coreFoundation, "[#${data.team.color}]${data.team.name}[white]已经完成了次代核心升级")
                 Blocks.coreFoundation ->
-                    if(teamMoney.get(data.team) >= 7200)
+                    if (teamMoney.get(data.team) >= T3BaseNeed)
                         core.upgrade(Blocks.coreNucleus, "[#${data.team.color}]${data.team.name}[white]已经完成了终代核心升级\n" +
-                    "[red]将队伍资源点填充到16800即可开放tier6单位升级！")
-                    else if(teamMoney.get(data.team) < 2400)
+                    "[red]将队伍资源点填充到 $T4BaseNeed 即可开放tier6单位升级！")
+                    else if (teamMoney.get(data.team) < T2BaseNeed)
                         core.upgrade(Blocks.coreShard, "[#${data.team.color}]${data.team.name}[white]的资源不足以支撑次代核心运作,降级为初代核心")
                 Blocks.coreNucleus ->
-                    if(teamMoney.get(data.team) < 7200)
+                    if (teamMoney.get(data.team) < T3BaseNeed)
                         core.upgrade(Blocks.coreFoundation, "[#${data.team.color}]${data.team.name}[white]的资源不足以支撑终代核心运作,降级为次代核心")
             }
             //核心血量不足1/2,紧急回血
-            if (teamMoney.get(data.team) > core.maxHealth / copperToCoreHealth * 4 && core.health <= core.maxHealth / 2) {
+            if (teamMoney.get(data.team) > (core.maxHealth - core.health) * copperToCoreHealth * 4 && core.health <= core.maxHealth / 2) {
                 Call.effect(Fx.impactReactorExplosion,core.x,core.y, 0f, Color.red)
                 repeat(16) {
-                    itemDrop(ceil(teamMoney.get(data.team) * 0.75 / 8).toInt(), core.x, core.y, core.hitSize() * 16)
+                    itemDrop(ceil(core.maxHealth - core.health * copperToCoreHealth * 4 * 0.7).toInt(), core.x, core.y, core.hitSize() * 16)
                 }
-                teamMoney.put(data.team, (teamMoney.get(data.team) * 0.25).toInt())
+                teamMoney.put(data.team, (core.maxHealth - core.health * copperToCoreHealth * 3).toInt())
                 core.health = core.maxHealth
             }
         }
@@ -863,7 +894,7 @@ onEnable {
     loop(Dispatchers.game){
         state.teams.getActive().each { data ->
             val core = data.core() ?: return@each
-            if(core.health >= core.maxHealth - copperToCoreHealth && core.health < core.maxHealth * 1.5)
+            if (core.health >= core.maxHealth - copperToCoreHealth && core.health < core.maxHealth * 1.5)
                 //核心护盾
                 core.health += core.maxHealth * 0.05f
             else{
@@ -880,16 +911,15 @@ onEnable {
         }
         Groups.unit.each {
             //中毒阻回盾
-            if(it.hasEffect(StatusEffects.corroded)) return@each
+            if (it.hasEffect(StatusEffects.corroded)) return@each
             //单位护盾
-            if(it.shield <= it.maxShield())
+            if (it.shield <= it.maxShield())
                 it.shield += it.maxShield() * 0.08f
-            if(it.shield > it.maxShield())
+            if (it.shield > it.maxShield())
                 it.shield = it.maxShield()
         }
         delay(4000)
     }
-    val oreGrowSpeed = state.rules.tags.getInt("@oreGrowSpeed", 16)
     loop(Dispatchers.game){
         delay(1000)
         repeat(oreGrowSpeed){
@@ -897,7 +927,7 @@ onEnable {
                 Random.nextInt(0, world.width()),
                 Random.nextInt(0, world.height())
             )
-            if(tile.floor() == Blocks.stone)
+            if (tile.floor() == Blocks.stone)
                 tile.setNet(Blocks.copperWall, Team.crux, 0)
         }
     }
@@ -907,14 +937,12 @@ listen<EventType.TapEvent> {
     val player = it.player
     if (player.dead()) return@listen
     if ((it.tile.block() is CoreBlock && it.tile.team() == player.team()) ||
-        (player.unit().within(it.tile.worldx(), it.tile.worldy(), player.unit().hitSize * 1.5f) && !player.unit().within(it.tile.worldx(), it.tile.worldy(), player.unit().hitSize))) {
+        (player.unit().within(it.tile.worldx(), it.tile.worldy(), player.unit().hitSize * 1.5f) && !player.unit().within(player.mouseX(), player.mouseY(), player.unit().hitSize))) {
         //点击核心或单位外圈打开菜单
         launch(Dispatchers.game) { player.upgradeMenu() }
     }
 }
 
-val oreCostIncreaseTime = state.rules.tags.getInt("@oreCostIncreaseTime", 480) * 1000f
-val startTime by lazy { Time.millis() }
 listen<EventType.BlockDestroyEvent> { t ->
     val time = (Time.timeSinceMillis(startTime) / oreCostIncreaseTime).toInt()
     val amount = Random.nextInt(time + 1, time + 3)
@@ -922,7 +950,7 @@ listen<EventType.BlockDestroyEvent> { t ->
 }
 
 listen<EventType.UnitDestroyEvent> { u ->
-    if(u.unit.type in missile)
+    if (u.unit.type in missile)
         itemDrop(u.unit.stack.amount, u.unit.x, u.unit.y)
     else
         itemDrop(u.unit.stack.amount + (u.unit.itemCapacity() * 0.4f).toInt(), u.unit.x, u.unit.y)
