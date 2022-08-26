@@ -104,6 +104,7 @@ fun Player.setCooldown(time: Float){
     cooldown.put(uuid(), (Time.timeSinceMillis(startTime) + time * 1000).toInt())
 }
 fun Player.addMoney(amount: Int){
+    if (amount <= 0) return
     setCooldown((Math.pow(log10(amount.toDouble()), 4.00) / 2).toFloat())
     playerMoney.put(uuid(), playerMoney.get(uuid()) + amount)
     teamMoney.put(team(), teamMoney.get(team()) + amount)
@@ -122,11 +123,12 @@ fun Player.checkMoney(amount: Int): Boolean {
 }
 
 fun mindustry.gen.Unit.maxShield(): Float{
+    if (type == UnitTypes.mega) return (health * 1.5f).coerceAtMost(maxHealth * 1.5f)
     return (health * 2.5f).coerceAtMost(maxHealth * 2.5f)
 }
 
 fun itemDrop(amount: Int, x :Float, y :Float, maxRange: Float = 16f){
-    if (amount == 0) return
+    if (amount <= 0) return
     var dorpAmount = amount
     val dropX = x - maxRange / 2 + Random.nextFloat() * maxRange
     val dropY = y - maxRange / 2 + Random.nextFloat() * maxRange
@@ -193,9 +195,9 @@ suspend fun Player.upgradeMenu() {
             this, 30_000, "是否还原${lastUnitType.get(uuid()).emoji()}？",
             """
             [cyan]你之前的单位${lastUnitType.get(uuid()).emoji()}虽然已经阵亡 但是我们依然可以还原他
-            [lightgray]还原死前用的单位所需要贡献点为那个单位容量*1.5(无法还原t6)
+            [lightgray]还原死前用的单位所需要贡献点为那个单位容量*0.5(无法还原t6)
             你的贡献点：${getMoney()}
-            预计消耗${(lastUnitType.get(uuid()).itemCapacity * 1.5).toInt()}
+            预计消耗${(lastUnitType.get(uuid()).itemCapacity * 0.5).toInt()}
             [red]如果贡献点无法还原,那么你依然可以还原,但下次死亡你将无法再次还原此单位
             [lightgray]点了否也无法还原哦
         """.trimIndent()
@@ -203,8 +205,8 @@ suspend fun Player.upgradeMenu() {
             add(listOf(
                 "[green]是" to {
                     upgrade(lastUnitType.get(uuid()))
-                    if (checkMoney((lastUnitType.get(uuid()).itemCapacity * 1.5).toInt()))
-                        removeMoney((lastUnitType.get(uuid()).itemCapacity * 1.5).toInt())
+                    if (checkMoney((lastUnitType.get(uuid()).itemCapacity * 0.5).toInt()))
+                        removeMoney((lastUnitType.get(uuid()).itemCapacity * 0.5).toInt())
                     else
                         lastUnitType.put(uuid(),UnitTypes.flare)
                 },
@@ -315,11 +317,13 @@ suspend fun Player.upgradeMenu() {
             if (checkCooldown()){
                 if (unit().stack.amount != 0 && unit().within(core().x,core().y,Vars.itemTransferRange)) add(listOf(
                     "上交全部资源${unit().stack.amount}" to {
-                        addMoney(unit().stack.amount)
+                        if (unit().stack.amount != 0)
+                            addMoney(unit().stack.amount)
                         unit().stack.amount = 0
                     },
                     "上交1/4资源${(unit().stack.amount / 4).toInt()}" to {
-                        addMoney((unit().stack.amount / 4).toInt())
+                        if (unit().stack.amount != 0)
+                            addMoney((unit().stack.amount / 4).toInt())
                         unit().stack.amount -= (unit().stack.amount / 4).toInt()
                         upgradeMenu()
                     }
@@ -564,7 +568,7 @@ onEnable {
         registerMapRule(unitType.weapons.get(0).bullet::collidesAir) { true }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.corroded }
         registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 4f * 60 }
-        registerMapRule(unitType::health) { 180f }
+        registerMapRule(unitType::health) { 120f }
         registerMapRule(unitType::armor) { 0f }
 
 
@@ -574,7 +578,7 @@ onEnable {
         registerMapRule(unitType::itemCapacity) { T3ItemCap }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::health) { 320f }
-        registerMapRule(unitType.weapons.get(2).bullet::damage) { 120f }
+        registerMapRule(unitType.weapons.get(2).bullet::damage) { 60f }
         registerMapRule(unitType.weapons.get(2).bullet::collidesAir) { true }
         registerMapRule(unitType.weapons.get(2).bullet::status) { StatusEffects.corroded }
         registerMapRule(unitType.weapons.get(2).bullet::statusDuration) { 4f * 60 }
@@ -608,12 +612,11 @@ onEnable {
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::health) { 600f }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 140f }
+        registerMapRule(unitType.weapons.get(0).bullet::damage) { 100f }
+        registerMapRule(unitType.weapons.get(2).bullet::buildingDamageMultiplier) { 1.5f }
         registerMapRule(unitType.weapons.get(0).bullet::collidesAir) { true }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.corroded }
         registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 8f * 60 }
-        registerMapRule(unitType.weapons.get(0).bullet::buildingDamageMultiplier) { 0.5f }
-        registerMapRule(unitType.weapons.get(2).bullet::buildingDamageMultiplier) { 0.5f }
 
         unitType = UnitTypes.cyerce
         registerMapRule(unitType::itemCapacity) { T4ItemCap }
@@ -692,9 +695,12 @@ onEnable {
         registerMapRule(unitType::armor) { 12f }
         registerMapRule(unitType::health) { 1500f }
         registerMapRule(unitType.weapons.get(0)::rotateSpeed) { Float.MAX_VALUE }
-        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::splashDamage) { 7f }
-        registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.sporeSlowed }
-        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 1.6f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::status) { StatusEffects.sporeSlowed }
+        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::statusDuration) { 2.4f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.wet }
+        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 4.8f * 60 }
+        registerMapRule(unitType.weapons.get(1).bullet::status) { StatusEffects.shocked }
+        registerMapRule(unitType.weapons.get(1).bullet::buildingDamageMultiplier) { 3f }
 
         unitType = UnitTypes.tecta
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
@@ -706,14 +712,14 @@ onEnable {
         registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 2f * 60 }
         registerMapRule(unitType.weapons.get(1)::shootStatus) { StatusEffects.slow }
         registerMapRule(unitType.weapons.get(1)::shootStatusDuration) { 2f * 60 }
-        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 35f }
+        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 45f }
 
         unitType = UnitTypes.quell
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::itemCapacity) { Int.MAX_VALUE }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 240f }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::lifetime) { 2.4f * 60 }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::health) { 90f }
+        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::health) { 120f }
         registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::rotateSpeed) { 5f }
         registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.unmoving }
         registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 2f * 60 }
@@ -727,20 +733,8 @@ onEnable {
         registerMapRule(unitType::itemCapacity) { T6ItemCap }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType::health) { 2200f }
-        registerMapRule(unitType.weapons.get(0)::reload) { 4f * 60 }
-        registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.electrified }
-        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 5f * 60 }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 300f }
-        registerMapRule(unitType.weapons.get(0).bullet::spawnUnit) { (Blocks.scathe as ItemTurret).ammoTypes[Items.carbide].spawnUnit }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 650f }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::status) { StatusEffects.corroded }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::statusDuration) { 15f * 60 }
-        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 60f }
-        registerMapRule(unitType.weapons.get(0).bullet::splashDamageRadius) { 80f }
-        registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.slow }
-        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 3f * 60 }
-
+        registerMapRule(unitType::health) { 2500f }
+        registerMapRule(unitType.weapons.get(0).bullet::damage) { 550f }
 
         unitType = UnitTypes.eclipse
         registerMapRule(unitType::itemCapacity) { T6ItemCap }
@@ -754,7 +748,7 @@ onEnable {
         registerMapRule(unitType::itemCapacity) { T6ItemCap }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::armor) { 15f }
-        registerMapRule(unitType::health) { 3200f }
+        registerMapRule(unitType::health) { 3000f }
         registerMapRule(unitType.weapons.get(0)::rotateSpeed) { Float.MAX_VALUE }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.sporeSlowed }
         registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 4.8f * 60 }
@@ -764,7 +758,7 @@ onEnable {
         registerMapRule(unitType::legCount) { 0 }
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType::health) { 3000f }
+        registerMapRule(unitType::health) { 2400f }
         registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.unmoving }
         registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 3f * 60 }
 
@@ -879,15 +873,6 @@ onEnable {
                     if (teamMoney.get(data.team) < T3BaseNeed)
                         core.upgrade(Blocks.coreFoundation, "[#${data.team.color}]${data.team.name}[white]的资源不足以支撑终代核心运作,降级为次代核心")
             }
-            //核心血量不足1/2,紧急回血
-            if (teamMoney.get(data.team) > (core.maxHealth - core.health) * copperToCoreHealth * 4 && core.health <= core.maxHealth / 2) {
-                Call.effect(Fx.impactReactorExplosion,core.x,core.y, 0f, Color.red)
-                repeat(16) {
-                    itemDrop(ceil(core.maxHealth - core.health * copperToCoreHealth * 4 * 0.7).toInt(), core.x, core.y, core.hitSize() * 16)
-                }
-                teamMoney.put(data.team, (core.maxHealth - core.health * copperToCoreHealth * 3).toInt())
-                core.health = core.maxHealth
-            }
         }
         yield()
     }
@@ -896,7 +881,7 @@ onEnable {
             val core = data.core() ?: return@each
             if (core.health >= core.maxHealth - copperToCoreHealth && core.health < core.maxHealth * 1.5)
                 //核心护盾
-                core.health += core.maxHealth * 0.05f
+                core.health += core.maxHealth * 0.0125f
             else{
                 //核心常规回血
                 val use = ((core.maxHealth - core.health) / copperToCoreHealth).toInt()
@@ -910,15 +895,17 @@ onEnable {
             }
         }
         Groups.unit.each {
-            //中毒阻回盾
-            if (it.hasEffect(StatusEffects.corroded)) return@each
             //单位护盾
-            if (it.shield <= it.maxShield())
-                it.shield += it.maxShield() * 0.08f
-            if (it.shield > it.maxShield())
+            if (it.shield < it.maxShield()) {
+                //中毒阻回盾
+                if (!it.hasEffect(StatusEffects.corroded)) it.shield += it.maxShield() * 0.015f
+                it.shield += it.maxShield() * 0.005f
+            }
+            if (it.shield >= it.maxShield()){
                 it.shield = it.maxShield()
+            }
         }
-        delay(4000)
+        delay(1000)
     }
     loop(Dispatchers.game){
         delay(1000)
@@ -952,6 +939,14 @@ listen<EventType.BlockDestroyEvent> { t ->
 listen<EventType.UnitDestroyEvent> { u ->
     if (u.unit.type in missile)
         itemDrop(u.unit.stack.amount, u.unit.x, u.unit.y)
-    else
-        itemDrop(u.unit.stack.amount + (u.unit.itemCapacity() * 0.4f).toInt(), u.unit.x, u.unit.y)
+    else {
+        var amount = u.unit.stack.amount + u.unit.itemCapacity() * 0.4f
+        if (u.unit.hasEffect(StatusEffects.overclock)) amount += u.unit.itemCapacity() * 0.1f
+        if (u.unit.hasEffect(StatusEffects.overdrive)) amount += u.unit.itemCapacity() * 0.2f
+        if (u.unit.hasEffect(StatusEffects.boss)) amount += u.unit.itemCapacity() * 0.2f
+        if (u.unit.hasEffect(StatusEffects.freezing)) amount -= u.unit.itemCapacity() * 0.1f
+        if (u.unit.hasEffect(StatusEffects.sapped)) amount -= u.unit.itemCapacity() * 0.1f
+        if (u.unit.hasEffect(StatusEffects.electrified)) amount -= u.unit.itemCapacity() * 0.1f
+        itemDrop(amount.toInt(), u.unit.x, u.unit.y)
+    }
 }
