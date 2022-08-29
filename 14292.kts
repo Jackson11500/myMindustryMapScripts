@@ -53,8 +53,8 @@ val T6ItemCap by lazy { Vars.state.rules.tags.getInt("@T6ItemCap", 2880) }
 val startTeamMoney by lazy { Vars.state.rules.tags.getInt("@startTeamMoney", 250) }
 val T2BaseNeed by lazy { Vars.state.rules.tags.getInt("@T2BaseNeed", 2400) }
 val T3BaseNeed by lazy { Vars.state.rules.tags.getInt("@T3BaseNeed", 7200) }
-val T4BaseNeed by lazy { Vars.state.rules.tags.getInt("@T4BaseNeed", 16800) }
-val MaxBaseNeed by lazy { Vars.state.rules.tags.getInt("@MaxBaseNeed", 32000) }
+val T4BaseNeed by lazy { Vars.state.rules.tags.getInt("@T4BaseNeed", 24000) }
+val MaxBaseNeed by lazy { Vars.state.rules.tags.getInt("@MaxBaseNeed", 48000) }
 
 val missile = arrayOf(
     UnitTypes.anthicus.weapons.get(0).bullet.spawnUnit,
@@ -580,8 +580,6 @@ onEnable {
         registerMapRule(unitType::health) { 320f }
         registerMapRule(unitType.weapons.get(2).bullet::damage) { 60f }
         registerMapRule(unitType.weapons.get(2).bullet::collidesAir) { true }
-        registerMapRule(unitType.weapons.get(2).bullet::status) { StatusEffects.corroded }
-        registerMapRule(unitType.weapons.get(2).bullet::statusDuration) { 4f * 60 }
         registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 15f }
         registerMapRule(unitType::armor) { 0f }
 
@@ -612,11 +610,13 @@ onEnable {
         registerMapRule(unitType::flying) { true }
         registerMapRule(unitType::health) { 600f }
         registerMapRule(unitType::armor) { 0f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 100f }
-        registerMapRule(unitType.weapons.get(2).bullet::buildingDamageMultiplier) { 1.5f }
+        registerMapRule(unitType.weapons.get(0).bullet::damage) { 70f }
+        registerMapRule(unitType.weapons.get(2).bullet::buildingDamageMultiplier) { 0.5f }
         registerMapRule(unitType.weapons.get(0).bullet::collidesAir) { true }
         registerMapRule(unitType.weapons.get(0).bullet::status) { StatusEffects.corroded }
-        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 8f * 60 }
+        registerMapRule(unitType.weapons.get(0).bullet::statusDuration) { 6f * 60 }
+        registerMapRule(unitType.weapons.get(0)::shootStatus) { StatusEffects.slow }
+        registerMapRule(unitType.weapons.get(0)::shootStatusDuration) { 0.8f * 60 }
 
         unitType = UnitTypes.cyerce
         registerMapRule(unitType::itemCapacity) { T4ItemCap }
@@ -668,9 +668,9 @@ onEnable {
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
         registerMapRule(unitType::armor) { 0f }
         registerMapRule(unitType::health) { 680f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 40f }
-        registerMapRule(unitType.weapons.get(0).bullet::lightningDamage) { 15f }
-        registerMapRule(unitType.weapons.get(0).bullet::buildingDamageMultiplier) { 2f }
+        registerMapRule(unitType.weapons.get(0).bullet::buildingDamageMultiplier) { 4f }
+        registerMapRule(unitType.weapons.get(0).bullet.intervalBullet::buildingDamageMultiplier) { 2f }
+        registerMapRule(unitType.weapons.get(0).bullet.intervalBullet.lightningType::buildingDamageMultiplier) { 1f }
 
         unitType = UnitTypes.sei
         registerMapRule(unitType::itemCapacity) { T5ItemCap }
