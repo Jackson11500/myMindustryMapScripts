@@ -19,6 +19,7 @@ import mindustry.gen.Call
 import mindustry.gen.Groups
 import mindustry.gen.Iconc.*
 import mindustry.gen.Player
+import mindustry.gen.Sounds
 import mindustry.type.StatusEffect
 import mindustry.type.UnitType
 import mindustry.world.Block
@@ -534,7 +535,6 @@ suspend fun Player.infoMenu() {
         ))
     }
 }
-
 
 onEnable {
     contextScript<coreMindustry.UtilMapRule>().apply {
