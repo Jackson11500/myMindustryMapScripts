@@ -4,6 +4,7 @@
 package mapScript
 
 import arc.graphics.Color
+import arc.graphics.Colors
 import arc.struct.ObjectIntMap
 import arc.util.Time
 import arc.util.Tmp
@@ -13,6 +14,7 @@ import mindustry.content.Fx
 import mindustry.core.World
 import coreLibrary.lib.util.loop
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 import mindustry.Vars
 import mindustry.content.Items
@@ -20,6 +22,7 @@ import mindustry.content.StatusEffects
 import mindustry.content.UnitTypes
 import mindustry.entities.Units
 import mindustry.entities.abilities.EnergyFieldAbility
+import mindustry.entities.bullet.SapBulletType
 import mindustry.game.EventType
 import mindustry.game.Team
 import mindustry.gen.Call
@@ -37,7 +40,6 @@ import kotlin.random.Random
  * https://mdt.wayzer.top/v2/map/14668/latest
  */
 name = "Lord of War"
-//....LOW?
 
 val menu = contextScript<coreMindustry.UtilNext>()
 
@@ -135,11 +137,19 @@ fun UnitType?.level(): Int{
     }
 }
 
+fun Float.format(i: Int = 2): String {
+    return "%.${i}f".format(this)
+}
+
 val cityCoins: ObjectIntMap<CoreBuild> = ObjectIntMap()//城市的金钱
 fun CoreBuild.coins(): Int { return cityCoins[this] }
 fun CoreBuild.removeCoin(amount: Int) { cityCoins.put(this, coins() - amount) }
 fun CoreBuild.addCoin(amount: Int) { cityCoins.put(this, coins() + amount)}
 fun CoreBuild.setCoin(amount: Int) { cityCoins.put(this, amount) }
+
+val cityLord: MutableMap<CoreBuild, String> = mutableMapOf()//城市的领主
+fun CoreBuild.lord(): String? { return cityLord.getOrDefault(this, null) }
+fun CoreBuild.lord(uuid: String): String? { return cityLord.put(this, uuid) }
 
 val teamCoins: ObjectIntMap<Team> = ObjectIntMap()//城市的金钱
 fun Team.coins(): Int { return teamCoins[this] }
@@ -156,9 +166,9 @@ fun Player.removeCoin(amount: Int) {
     playerCoins.put(uuid(), coins() - amount)
     sendMessage("[red]失去 $amount 金币")
 }
-fun Player.addCoin(amount: Int) {
+fun Player.addCoin(amount: Int, quiet: Boolean = false) {
     playerCoins.put(uuid(), coins() + amount)
-    sendMessage("[green]得到 $amount 金币")
+    if(!quiet) sendMessage("[green]得到 $amount 金币")
 }
 fun Player.setCoin(amount: Int) {
     playerCoins.put(uuid(), amount)
@@ -193,10 +203,21 @@ fun CoreBuild.level():Int {
         Blocks.coreShard -> 1
         Blocks.coreFoundation -> 2
         Blocks.coreBastion -> 3
-        Blocks.coreCitadel -> 4
-        Blocks.coreNucleus -> 5
+        Blocks.coreNucleus -> 4
+        Blocks.coreCitadel -> 5
         Blocks.coreAcropolis -> 6
         else -> 0
+    }
+}
+fun CoreBuild.levelText(): String {
+    return when (level()) {
+        1 -> "村庄"
+        2 -> "乡镇"
+        3 -> "庄园"
+        4 -> "城市"
+        5 -> "大城市"
+        6 -> "首都"
+        else -> ""
     }
 }
 
@@ -251,9 +272,9 @@ fun Player.createLordUnit(core: CoreBuild,unitType: UnitType? = lordUnitType()):
         launch(Dispatchers.game){
             unitOwner[unit] = uuid()
             val spawnTime = Time.millis()
-            while(Time.timeSinceMillis(spawnTime) / 1000 <= 60){
-                Call.label("${Iconc.alphaaaa}[red]领主级单位降临[white]${Iconc.alphaaaa}\n$name [white]${60 - Time.timeSinceMillis(spawnTime) / 1000}", 0.2026f, x, y)
-                Call.effect(Fx.explosion, x, y, 0f, Color.red)
+            while(Time.timeSinceMillis(spawnTime) / 1000 <= 120){
+                Call.label("${unit.type.emoji()}[red]领主级单位降临[white]${unit.type.emoji()}\n$name [white]${120 - Time.timeSinceMillis(spawnTime) / 1000}", 0.2026f, x, y)
+                Call.effect(Fx.spawnShockwave, x, y, 0f, team().color)
                 delay(200)
             }
             spawnedByCore = true
@@ -276,6 +297,8 @@ suspend fun Player.cityMenu(core: CoreBuild) {
         """
             [cyan]当前城市拥有金币[yellow]${core.coins()}
             [cyan]你当前拥有金币[yellow]${coins()}
+            [cyan]升级城池将会变为此城池领主！会自动收集一半的金币
+            [red]核心机收取资源将减少！
         """.trimIndent()
     ) {
         if(checkCooldown()){
@@ -308,9 +331,8 @@ suspend fun Player.cityMenu(core: CoreBuild) {
                     }
                     tile.setNet(target, core.team, 0)
                     (tile.build as CoreBuild).setCoin(coins - cost)
-                    broadcast("[#${core.team.color}]位于[$x,$y]的 ${core.block.emoji()} 已经被[white] $name [#${core.team.color}]升级为 ${tile.build.block.emoji()}".with(
-                        "x" to core.x.toInt(), "y" to core.y.toInt()
-                    ), quite = true)
+                    (tile.build as CoreBuild).lord(uuid())
+                    broadcast("[#${core.team.color}]位于[${World.toTile(core.x)},${World.toTile(core.y)}]的 ${core.block.emoji()} 已经被[white] $name [#${core.team.color}]升级为 ${tile.build.block.emoji()}[white]${core.levelText()}".with(), quite = true)
                 }
             })
         }
@@ -320,10 +342,14 @@ suspend fun Player.cityMenu(core: CoreBuild) {
             "银行" to {bankMenu(core)},
             "领主" to {lordMenu(core)}
         )
+        this += listOf(
+            "取消" to {}
+        )
         if (admin && Groups.player.size() <= 5){
             this += listOf(
-                "[red]<ADMIN>自己加10000金币" to { addCoin(10000) },
-                "[red]<ADMIN>城池加10000金币" to { core.addCoin(10000) }
+                "[red]<ADMIN>自己加100000金币" to { addCoin(100000) },
+                "[red]<ADMIN>城池加100000金币" to { core.addCoin(100000) },
+                "[red]<ADMIN>随机领主" to { if (lordUnitType() != null) lordUnitType(lordUnitType().levelUnits()!!.random()) }
             )
         }
     }
@@ -415,7 +441,7 @@ suspend fun Player.warMenu(core: CoreBuild) {
                                     removeCoin(lordUnitType().cost())
                                     broadcast("$name [#${team().color}]领主级单位${lordUnitType()!!.emoji()}准备出征!".with(), quite = true)
                                     Call.announce(con, "[red]Tips退出领主级单位将直接消失！")
-                                    setLordCooldown(600f)
+                                    setLordCooldown(900f)
                                     warMenu(core)
                                 } else {
                                     sendMessage("[red]生成失败！")
@@ -435,6 +461,9 @@ suspend fun Player.warMenu(core: CoreBuild) {
             "银行" to {bankMenu(core)},
             "领主" to {lordMenu(core)}
         )
+        this += listOf(
+            "取消" to {}
+        )
     }
 }
 suspend fun Player.bankMenu(core: CoreBuild) {
@@ -452,23 +481,18 @@ suspend fun Player.bankMenu(core: CoreBuild) {
                     val playerLastText = playerLastSendText[uuid()]
                     sendMessage("------------\n[yellow]请输入所存数量\n[white]------------")
                     val startInputTime = Time.millis()
-                    var fail = false
+                    var fail = true
                     var coin = 0
                     playerInputing[uuid()] = true
                     while (Time.timeSinceMillis(startInputTime) / 1000 <= 15) {
-                        if (playerInputing[uuid()] == false) {
-                            fail = true
-                            break
-                        }
+                        if (playerInputing[uuid()] == false) break
                         if (playerLastText != playerLastSendText[uuid()]){
                             val amount = playerLastSendText[uuid()]?.toIntOrNull()
-                            if (amount == null || amount <= 0 || amount > coins()){
-                                fail = true
-                                break
-                            }
+                            if (amount == null || amount <= 0 || amount > coins()) break
                             team().addCoin(amount)
                             removeCoin(amount)
                             coin = amount
+                            fail = false
                             break
                         }
                         yield()
@@ -486,23 +510,18 @@ suspend fun Player.bankMenu(core: CoreBuild) {
                     val playerLastText = playerLastSendText[uuid()]
                     sendMessage("------------\n[yellow]请输入所取数量\n[white]------------")
                     val startInputTime = Time.millis()
-                    var fail = false
+                    var fail = true
                     var coin = 0
                     playerInputing[uuid()] = true
                     while (Time.timeSinceMillis(startInputTime) / 1000 <= 15) {
-                        if (playerInputing[uuid()] == false) {
-                            fail = true
-                            break
-                        }
+                        if (playerInputing[uuid()] == false) break
                         if (playerLastText != playerLastSendText[uuid()]){
                             val amount = playerLastSendText[uuid()]?.toIntOrNull()
-                            if (amount == null || amount > team().coins() || amount <= 0){
-                                fail = true
-                                break
-                            }
+                            if (amount == null || amount > team().coins() || amount <= 0) break
                             team().removeCoin(amount)
                             addCoin(amount)
                             coin = amount
+                            fail = false
                             break
                         }
                         yield()
@@ -524,6 +543,9 @@ suspend fun Player.bankMenu(core: CoreBuild) {
         "[green]银行" to {bankMenu(core)},
         "领主" to {lordMenu(core)}
     )
+    this += listOf(
+        "取消" to {}
+    )
     }
 }
 
@@ -538,52 +560,59 @@ suspend fun Player.lordMenu(core: CoreBuild) {
         fun Float.getRulesCost(cost: Int): Float {
             return (this * cost).pow(2)
         }
+
+
         if (unitType().level() > 0) {
             this += listOf(
                 "单位上限\n${unitCap()}->${unitCap() + 4}\n${Iconc.blockCliff}${unitCap() * unitCap()}" to {
                     if (coins() >= unitCap() * unitCap()) {
                         removeCoin(unitCap() * unitCap())
                         unitCap(unitCap() + 4)
+                        lordMenu(core)
                     } else {
                         sendMessage("[red]金钱不足！")
                     }
                 }
             )
             this += listOf(
-                "建筑血量\n${team().rules().blockHealthMultiplier}->${team().rules().blockHealthMultiplier + 0.05}\n${Iconc.blockCliff}${team().rules().blockHealthMultiplier.getRulesCost(30).toInt()}" to {
+                "建筑血量\n${team().rules().blockHealthMultiplier.format()}->${(team().rules().blockHealthMultiplier + 0.05f).format()}\n${Iconc.blockCliff}${team().rules().blockHealthMultiplier.getRulesCost(30).toInt()}" to {
                     if (coins() >= team().rules().blockHealthMultiplier.getRulesCost(40)) {
                         removeCoin(team().rules().blockHealthMultiplier.getRulesCost(40).toInt())
                         team().rules().blockHealthMultiplier += 0.05f
-                        broadcast("[white]$name [#${team().color}]购买了建筑血量(${team().rules().blockHealthMultiplier - 0.05f} -> ${team().rules().blockHealthMultiplier}}".with(), quite = true)
+                        broadcast("[white]$name [#${team().color}]购买了建筑血量(${(team().rules().blockHealthMultiplier - 0.05f).format()} -> ${team().rules().blockHealthMultiplier.format()}}".with(), quite = true)
+                        lordMenu(core)
                     } else {
                         sendMessage("[red]金钱不足！")
                     }
                 },
-                "建筑攻击\n${team().rules().blockDamageMultiplier}->${team().rules().blockDamageMultiplier + 0.05}\n${Iconc.blockCliff}${team().rules().blockDamageMultiplier.getRulesCost(30).toInt()}" to {
+                "建筑攻击\n${team().rules().blockDamageMultiplier.format()}->${(team().rules().blockDamageMultiplier + 0.05f).format()}\n${Iconc.blockCliff}${team().rules().blockDamageMultiplier.getRulesCost(30).toInt()}" to {
                     if (coins() >= team().rules().blockDamageMultiplier.getRulesCost(40)) {
                         removeCoin(team().rules().blockDamageMultiplier.getRulesCost(40).toInt())
                         team().rules().blockDamageMultiplier += 0.05f
-                        broadcast("[white]$name [#${team().color}]购买了建筑攻击(${team().rules().blockDamageMultiplier - 0.05f} -> ${team().rules().blockDamageMultiplier}}".with(), quite = true)
+                        broadcast("[white]$name [#${team().color}]购买了建筑攻击(${(team().rules().blockDamageMultiplier - 0.05f).format()} -> ${team().rules().blockDamageMultiplier.format()}}".with(), quite = true)
+                        lordMenu(core)
                     } else {
                         sendMessage("[red]金钱不足！")
                     }
                 }
             )
             this += listOf(
-                "建筑速度\n${team().rules().buildSpeedMultiplier}->${team().rules().buildSpeedMultiplier + 0.05}\n${Iconc.blockCliff}${team().rules().buildSpeedMultiplier.getRulesCost(30).toInt()}" to {
+                "建筑速度\n${team().rules().buildSpeedMultiplier.format()}->${(team().rules().buildSpeedMultiplier + 0.05f).format()}\n${Iconc.blockCliff}${team().rules().buildSpeedMultiplier.getRulesCost(30).toInt()}" to {
                     if (coins() >= team().rules().buildSpeedMultiplier.getRulesCost(25)) {
                         removeCoin(team().rules().buildSpeedMultiplier.getRulesCost(25).toInt())
                         team().rules().buildSpeedMultiplier += 0.05f
-                        broadcast("[white]$name [#${team().color}]购买了建筑速度(${team().rules().buildSpeedMultiplier - 0.05f} -> ${team().rules().buildSpeedMultiplier}}".with(), quite = true)
+                        broadcast("[white]$name [#${team().color}]购买了建筑速度(${(team().rules().buildSpeedMultiplier - 0.05f).format()} -> ${team().rules().buildSpeedMultiplier.format()}}".with(), quite = true)
+                        lordMenu(core)
                     } else {
                         sendMessage("[red]金钱不足！")
                     }
                 },
-                "单位攻击\n${team().rules().unitDamageMultiplier}->${team().rules().unitDamageMultiplier + 0.05}\n${Iconc.blockCliff}${team().rules().unitDamageMultiplier.getRulesCost(45).toInt()}" to {
+                "单位攻击\n${team().rules().unitDamageMultiplier.format()}->${(team().rules().unitDamageMultiplier + 0.05f).format()}\n${Iconc.blockCliff}${team().rules().unitDamageMultiplier.getRulesCost(45).toInt()}" to {
                     if (coins() >= team().rules().unitDamageMultiplier.getRulesCost(45)) {
                         removeCoin(team().rules().unitDamageMultiplier.getRulesCost(45).toInt())
                         team().rules().unitDamageMultiplier += 0.05f
-                        broadcast("[white]$name [#${team().color}]购买了单位攻击(${team().rules().unitDamageMultiplier - 0.05f} -> ${team().rules().unitDamageMultiplier}}".with(), quite = true)
+                        broadcast("[white]$name [#${team().color}]购买了单位攻击(${(team().rules().unitDamageMultiplier - 0.05f).format()} -> ${team().rules().unitDamageMultiplier.format()}}".with(), quite = true)
+                        lordMenu(core)
                     } else {
                         sendMessage("[red]金钱不足！")
                     }
@@ -596,6 +625,9 @@ suspend fun Player.lordMenu(core: CoreBuild) {
             "银行" to {bankMenu(core)},
             "[green]领主" to {lordMenu(core)}
         )
+        this += listOf(
+            "取消" to {}
+        )
     }
 }
 onEnable{
@@ -605,19 +637,19 @@ onEnable{
         registerMapRule((Blocks.coreShard as CoreBlock)::armor) { 10f }
         registerMapRule((Blocks.coreFoundation as CoreBlock)::unitType) { UnitTypes.alpha }
         registerMapRule((Blocks.coreFoundation as CoreBlock)::health) { 4000 }
-        registerMapRule((Blocks.coreShard as CoreBlock)::armor) { 15f }
+        registerMapRule((Blocks.coreFoundation as CoreBlock)::armor) { 15f }
         registerMapRule((Blocks.coreBastion as CoreBlock)::unitType) { UnitTypes.alpha }
         registerMapRule((Blocks.coreBastion as CoreBlock)::health) { 8000 }
-        registerMapRule((Blocks.coreShard as CoreBlock)::armor) { 20f }
+        registerMapRule((Blocks.coreBastion as CoreBlock)::armor) { 20f }
         registerMapRule((Blocks.coreNucleus as CoreBlock)::unitType) { UnitTypes.alpha }
         registerMapRule((Blocks.coreNucleus as CoreBlock)::health) { 12000 }
-        registerMapRule((Blocks.coreShard as CoreBlock)::armor) { 25f }
+        registerMapRule((Blocks.coreNucleus as CoreBlock)::armor) { 25f }
         registerMapRule((Blocks.coreCitadel as CoreBlock)::unitType) { UnitTypes.alpha }
         registerMapRule((Blocks.coreCitadel as CoreBlock)::health) { 32000 }
-        registerMapRule((Blocks.coreShard as CoreBlock)::armor) { 30f }
+        registerMapRule((Blocks.coreCitadel as CoreBlock)::armor) { 30f }
         registerMapRule((Blocks.coreAcropolis as CoreBlock)::unitType) { UnitTypes.alpha }
         registerMapRule((Blocks.coreAcropolis as CoreBlock)::health) { 64000 }
-        registerMapRule((Blocks.coreShard as CoreBlock)::armor) { 40f }
+        registerMapRule((Blocks.coreAcropolis as CoreBlock)::armor) { 40f }
 
         T1Units.forEach {
             registerMapRule(it::armor) { 0f }
@@ -642,13 +674,14 @@ onEnable{
         var unitType = UnitTypes.merui
         registerMapRule(unitType::health) { 120f }
 
-        unitType = UnitTypes.avert
+        unitType = UnitTypes.elude
         registerMapRule(unitType::health) { 80f }
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 6f }
 
         unitType = UnitTypes.stell
-        registerMapRule(unitType::health) { 210f }
+        registerMapRule(unitType::health) { 220f }
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 12f }
+        registerMapRule(unitType::armor) { 3f }
         //T1END
         //T2START
         unitType = UnitTypes.pulsar
@@ -668,8 +701,9 @@ onEnable{
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 14f }
 
         unitType = UnitTypes.locus
-        registerMapRule(unitType::health) { 420f }
+        registerMapRule(unitType::health) { 480f }
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 12f }
+        registerMapRule(unitType::armor) { 6f }
         //T2END
         //T3START
         unitType = UnitTypes.mace
@@ -690,9 +724,10 @@ onEnable{
 
         unitType = UnitTypes.precept
         registerMapRule(unitType::health) { 840f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 26f }
-        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 12f }
-        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::damage) { 6f }
+        registerMapRule(unitType.weapons.get(0).bullet::damage) { 32f }
+        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 16f }
+        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::damage) { 8f }
+        registerMapRule(unitType::armor) { 12f }
         //T3END
         //T4START
         unitType = UnitTypes.spiroct
@@ -714,13 +749,15 @@ onEnable{
         registerMapRule(unitType::health) { 860f }
 
         unitType = UnitTypes.vanquish
-        registerMapRule(unitType::health) { 1280f }
+        registerMapRule(unitType::health) { 1460f }
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 65f }
         registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 26f }
+        registerMapRule(unitType::armor) { 18f }
         //T4END
         //T5START
         unitType = UnitTypes.arkyid
         registerMapRule(unitType::health) { 2140f }
+        registerMapRule((unitType.weapons.get(0).bullet as SapBulletType)::sapStrength) { 0.45f }
 
         unitType = UnitTypes.vela
         registerMapRule(unitType::health) { 1860f }
@@ -736,36 +773,65 @@ onEnable{
         registerMapRule(unitType::flying) { true }
 
         unitType = UnitTypes.scepter
-        registerMapRule(unitType::health) { 2620f }
+        registerMapRule(unitType::health) { 2680f }
         registerMapRule(unitType.weapons.get(1).bullet::status) { StatusEffects.wet }
         registerMapRule(unitType.weapons.get(1).bullet::statusDuration) { 2.5f * 60f }
+        registerMapRule(unitType::armor) { 36f }
         //T5END
         //LORDSTART
         unitType = UnitTypes.toxopid
         registerMapRule(unitType::health) { 10800f }
 
         unitType = UnitTypes.aegires
-        registerMapRule(unitType::health) { 8800f }
-        registerMapRule((unitType.abilities.get(0) as EnergyFieldAbility)::damage) { 60f }
+        registerMapRule(unitType::health) { 7800f }
+        registerMapRule((unitType.abilities.get(0) as EnergyFieldAbility)::damage) { 70f }
         registerMapRule((unitType.abilities.get(0) as EnergyFieldAbility)::maxTargets) { 80 }
+        registerMapRule((unitType.abilities.get(0) as EnergyFieldAbility)::healPercent) { 5f }
+        registerMapRule(StatusEffects.electrified::healthMultiplier) { 0.9f }
+        registerMapRule(StatusEffects.electrified::damageMultiplier) { 0.8f }
+        registerMapRule(StatusEffects.electrified::damage) { 0.9f }
         registerMapRule(unitType::flying) { true }
 
         unitType = UnitTypes.collaris
         registerMapRule(unitType::health) { 9600f }
+        registerMapRule(unitType.weapons.get(0).bullet::damage) { 150f }
+        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 30f }
+        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::damage) { 15f }
+        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::splashDamage) { 5f }
 
         unitType = UnitTypes.eclipse
         registerMapRule(unitType::health) { 10600f }
 
         unitType = UnitTypes.conquer
-        registerMapRule(unitType::health) { 14800f }
-        registerMapRule(unitType::flying) { true }//就你不能跨地形 给你个飞行我就不用写降临时被遮挡换地了
+        registerMapRule(unitType::health) { 16800f }
+        registerMapRule(unitType::armor) { 40f }
+        registerMapRule(unitType::flying) { true }
     }
     loop(Dispatchers.game){
         state.teams.getActive().forEach {
             it.cores.forEach { c ->
-                val amount = c.level() * max((Time.timeSinceMillis(startTime) / 1000 / 60 / 3).toInt(), 1)
+                var amount = c.level() * max((Time.timeSinceMillis(startTime) / 1000 / 60 / 3).toInt(), 1)
+                Groups.player.filter { p -> p.uuid() == c.lord() }.forEach { p ->
+                    p.addCoin(amount / 2, true)
+                    amount -= amount / 2
+                }
                 c.addCoin(amount)
-                Call.label("[#${c.team.color}]${Iconc.blockCliff}${c.coins()} \n +$amount/s", 1.013f, c.x, c.y)
+                val text = buildString {
+                    appendLine("[#${c.team.color}]${Iconc.blockCliff}${c.coins()}")
+                    appendLine("$amount/s")
+                    Groups.player.filter { p -> p.uuid() == c.lord() }.forEach {
+                        appendLine("[white]${it.name}")
+                    }
+                    append("[white]")
+                    append(c.levelText())
+                }
+                    Groups.player.filter { p ->
+                                p.within(c.x, c.y, 60f * 8f)
+                             || (world.tileWorld(p.mouseX, p.mouseY) != null
+                             && world.tileWorld(p.mouseX, p.mouseY).within(c.x, c.y, 30f * 8f))
+                    }.forEach { p ->
+                        Call.label(p.con, text, 1.013f, c.x, c.y)
+                    }
                 Units.nearby(null, c.x, c.y, 20 * 8f) { u ->
                     if (u.team == c.team && u.health < u.maxHealth) {
                         u.health += u.maxHealth / 100
