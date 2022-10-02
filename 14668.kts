@@ -332,7 +332,7 @@ suspend fun Player.cityMenu(core: CoreBuild) {
                     tile.setNet(target, core.team, 0)
                     (tile.build as CoreBuild).setCoin(coins - cost)
                     (tile.build as CoreBuild).lord(uuid())
-                    broadcast("[#${core.team.color}]位于[${World.toTile(core.x)},${World.toTile(core.y)}]的 ${core.block.emoji()} 已经被[white] $name [#${core.team.color}]升级为 ${tile.build.block.emoji()}[white]${core.levelText()}".with(), quite = true)
+                    broadcast("[#${core.team.color}]位于[${World.toTile(core.x)},${World.toTile(core.y)}]的 ${core.block.emoji()} 已经被[white] $name [#${core.team.color}]升级为 ${tile.build.block.emoji()}[white]${(tile.build as CoreBuild).levelText()}".with(), quite = true)
                 }
             })
         }
@@ -733,7 +733,9 @@ onEnable{
         unitType = UnitTypes.spiroct
         registerMapRule(unitType::health) { 960f }
         registerMapRule(unitType.weapons.get(0).bullet::damage) { 47f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 43f }
+        registerMapRule(unitType.weapons.get(2).bullet::damage) { 43f }
+        registerMapRule((unitType.weapons.get(0).bullet as SapBulletType)::sapStrength) { 0f }
+        registerMapRule((unitType.weapons.get(2).bullet as SapBulletType)::sapStrength) { 0f }
 
         unitType = UnitTypes.cyerce
         registerMapRule(unitType::health) { 860f }
@@ -757,7 +759,7 @@ onEnable{
         //T5START
         unitType = UnitTypes.arkyid
         registerMapRule(unitType::health) { 2140f }
-        registerMapRule((unitType.weapons.get(0).bullet as SapBulletType)::sapStrength) { 0.45f }
+        registerMapRule((unitType.weapons.get(0).bullet as SapBulletType)::sapStrength) { 0f }
 
         unitType = UnitTypes.vela
         registerMapRule(unitType::health) { 1860f }
