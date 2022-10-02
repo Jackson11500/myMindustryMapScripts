@@ -1,0 +1,195 @@
+{
+    "block": {
+      "core-shard": {
+        "health": 2000,
+        "armor": 10
+      },
+      "core-foundation": {
+        "unitType": "alpha",
+        "health": 400,
+        "armor": 15
+      },
+      "core-bastion": {
+        "unitType": "alpha",
+        "health": 8000,
+        "armor": 20
+      },
+      "core-nucleus": {
+        "unitType": "alpha",
+        "health": 12000,
+        "armor": 25
+      },
+      "core-citadel": {
+        "unitType": "alpha",
+        "health": 32000,
+        "armor": 30
+      },
+      "core-acropolis": {
+        "unitType": "alpha",
+        "health": 8000,
+        "armor": 20
+      }
+    },
+    "unit": {
+      "dagger": {
+        "armor": 0
+      },
+      "nova": {
+        "armor": 0
+      },
+      "merui": {
+        "health": 120,
+        "armor": 0
+      },
+      "elude": {
+        "health": 120,
+        "weapons.0.bullet.damage": 6,
+        "armor": 0
+      },
+      "stell": {
+        "health": 120,
+        "weapons.0.bullet.damage": 12,
+        "armor": 0
+      },
+      "pulsar": {
+        "health": 360,
+        "weapons.0.bullet.damage": 18,
+        "armor": 3
+      },
+      "poly": {
+        "health": 360,
+        "weapons.0.bullet.damage": 12,
+        "armor": 3
+      },
+      "atrax": {
+        "health": 360,
+        "weapons.0.bullet.damage": 18,
+        "armor": 3
+      },
+      "avert": {
+        "health": 360,
+        "weapons.0.bullet.damage": 14,
+        "armor": 3
+      },
+      "locus": {
+        "health": 360,
+        "weapons.0.bullet.damage": 12,
+        "armor": 6
+      },
+      "mace": {
+        "health": 620,
+        "weapons.0.bullet.damage": 48,
+        "armor": 6
+      },
+      "mega": {
+        "health": 320,
+        "weapons.0.bullet.damage": 18,
+        "weapons.2.bullet.damage": 12,
+        "armor": 6
+      },
+      "cleroi": {
+        "health": 460,
+        "weapons.2.bullet.damage": 12,
+        "armor": 6
+      },
+      "zenith": {
+        "health": 420,
+        "weapons.0.bullet.damage": 32,
+        "armor": 6
+      },
+      "precept": {
+        "health": 840,
+        "weapons.0.bullet.damage": 32,
+        "weapons.0.bullet.splashDamage": 16,
+        "weapons.0.bullet.fragBullet.damage": 8,
+        "armor": 12
+      },
+      "spiroct": {
+        "health": 420,
+        "weapons.0.bullet.damage": 37,
+        "weapons.0.bullet.sapStrength": 0,
+        "weapons.2.bullet.damage": 33,
+        "weapons.2.bullet.sapStrength": 0,
+        "armor": 12
+      },
+      "cyerce": {
+        "health": 860,
+        "weapons.0.bullet.damage": 70,
+        "flying": true,
+        "armor": 12
+      },
+      "anthicus": {
+        "health": 880,
+        "weapons.0.bullet.spawnUnit.weapons.0.bullet.splashDamage": 80,
+        "weapons.0.bullet.spawnUnit.speed": 2.1,
+        "armor": 12
+      },
+      "antumbra": {
+        "health": 860,
+        "armor": 12
+      },
+      "vanquish": {
+        "health": 1460,
+        "weapons.0.bullet.damage": 65,
+        "weapons.0.bullet.splashDamage": 26,
+        "armor": 18
+      },
+      "arkyid": {
+        "health": 2140,
+        "weapons.0.bullet.sapStrength": 0,
+        "armor": 18
+      },
+      "vela": {
+        "health": 1860,
+        "armor": 18
+      },
+      "tecta": {
+        "health": 1460,
+        "armor": 18
+      },
+      "sei": {
+        "health": 1640,
+        "weapons.0.bullet.damage": 21,
+        "weapons.0.bullet.splashDamage": 23,
+        "weapons.2.bullet.damage": 35,
+        "flying": true,
+        "armor": 18
+      },
+      "scepter": {
+        "health": 2680,
+        "weapons.2.bullet.status": "wet",
+        "weapons.2.bullet.statusDuration": 2.5,
+        "armor": 36
+      },
+      "toxopid": {
+        "health": 9800,
+        "armor": 36
+      },
+      "aegires": {
+        "health": 7800,
+        "abilities.0": [{
+          "damage": 80,
+          "maxTargets": 80,
+          "healPercent": 4
+        }],
+        "armor": 36
+      },
+      "collaris": {
+        "health": 9400,
+        "weapons.0.bullet.damage": 150,
+        "weapons.0.bullet.splashDamage": 30,
+        "weapons.0.bullet.fragBullet.damage": 15,
+        "weapons.0.bullet.fragBullet.splashDamage": 5,
+        "armor": 36
+      },
+      "eclipse": {
+        "health": 10600,
+        "armor": 36
+      },
+      "conquer": {
+        "health": 15800,
+        "flying": true,
+        "armor": 42
+      }
+    }
+  }
