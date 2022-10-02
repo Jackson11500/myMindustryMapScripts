@@ -13,4 +13,6 @@
 
 ### 需要ContentsTweaker!
 #### [ContentsTweaker](https://github.com/way-zer/ContentsTweaker/releases)
-#### [ContentsPatch](https://github.com/xkldklp/myMindustryMapScripts/blob/main/14668LordOfWar/14668.json)
+
+#### ~~[ContentsPatch](https://github.com/xkldklp/myMindustryMapScripts/blob/main/14668LordOfWar/14668.json)~~ ContentsPatch已内置
+~~WayZer:可以，但不建议，这样子，以后的mapscript分发会更加麻烦~~
