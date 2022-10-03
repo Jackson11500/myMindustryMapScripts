@@ -1,5 +1,4 @@
 @file:Depends("coreMindustry/utilNext", "调用菜单")
-@file:Depends("coreMindustry/utilMapRule", "修改核心单位,单位属性")
 @file:Depends("coreMindustry/contentsTweaker", "修改核心单位,单位属性")
 
 package mapScript
@@ -938,7 +937,7 @@ listen<EventType.TapEvent> {
         launch(Dispatchers.game) { player.cityMenu(it.tile.build as CoreBuild) }
     }
 }
-UnitTypes.oct
+
 listen<EventType.UnitControlEvent> {
     val unit: mindustry.gen.Unit = it.unit ?: return@listen
     val owner = unit.owner() ?: return@listen
