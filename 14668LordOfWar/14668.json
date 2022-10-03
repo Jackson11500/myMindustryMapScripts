@@ -48,7 +48,7 @@
     },
     "stell": {
       "health": 120,
-      "weapons.0.bullet.damage": 12,
+      "weapons.0.bullet.damage": 14,
       "armor": 0
     },
     "pulsar": {
@@ -99,13 +99,13 @@
     },
     "precept": {
       "health": 840,
-      "weapons.0.bullet.damage": 32,
-      "weapons.0.bullet.splashDamage": 16,
-      "weapons.0.bullet.fragBullet.damage": 8,
+      "weapons.0.bullet.damage": 36,
+      "weapons.0.bullet.splashDamage": 20,
+      "weapons.0.bullet.fragBullet.damage": 12,
       "armor": 12
     },
     "spiroct": {
-      "health": 420,
+      "health": 460,
       "weapons.0.bullet.damage": 37,
       "weapons.0.bullet.sapStrength": 0,
       "weapons.2.bullet.damage": 33,
@@ -114,24 +114,26 @@
     },
     "cyerce": {
       "health": 860,
-      "weapons.0.bullet.damage": 70,
       "flying": true,
       "armor": 12
     },
     "anthicus": {
       "health": 880,
       "weapons.0.bullet.spawnUnit.weapons.0.bullet.splashDamage": 80,
-      "weapons.0.bullet.spawnUnit.speed": 2.3,
+      "weapons.0.bullet.spawnUnit.speed": 2.5,
       "armor": 12
     },
     "antumbra": {
-      "health": 860,
+      "health": 820,
+      "weapons.0.bullet.damage": 11,
+      "weapons.0.bullet.splashDamage": 27,
+      "weapons.5.bullet.damage": 38,
       "armor": 12
     },
     "vanquish": {
-      "health": 1460,
-      "weapons.0.bullet.damage": 65,
-      "weapons.0.bullet.splashDamage": 26,
+      "health": 1560,
+      "weapons.0.bullet.damage": 85,
+      "weapons.0.bullet.splashDamage": 35,
       "armor": 18
     },
     "arkyid": {
@@ -148,7 +150,7 @@
       "armor": 18
     },
     "sei": {
-      "health": 1640,
+      "health": 1540,
       "weapons.0.bullet.damage": 21,
       "weapons.0.bullet.splashDamage": 23,
       "weapons.2.bullet.damage": 35,
@@ -157,8 +159,6 @@
     },
     "scepter": {
       "health": 2680,
-      "weapons.2.bullet.status": "wet",
-      "weapons.2.bullet.statusDuration": 2.5,
       "armor": 36
     },
     "toxopid": {
@@ -185,6 +185,8 @@
     },
     "collaris": {
       "health": 8400,
+      "targetAir": true,
+      "weapons.0.bullet.collidesAir": true,
       "weapons.0.bullet.damage": 150,
       "weapons.0.bullet.splashDamage": 30,
       "weapons.0.bullet.fragBullet.damage": 17,
@@ -201,7 +203,7 @@
     },
     "flare": {
       "health": 10,
-      "fogRadius": 61,
+      "fogRadius": 64,
       "speed": 3.6
     },
     "eclipse": {
@@ -223,7 +225,7 @@
           "type": "ForceFieldAbility",
           "radius": 120,
           "regen": 1.25,
-          "max": 6000,
+          "max": 8000,
           "cooldown": 120
         }
       ],
