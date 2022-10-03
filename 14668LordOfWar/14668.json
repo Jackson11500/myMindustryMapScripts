@@ -83,8 +83,8 @@
     },
     "mega": {
       "health": 320,
-      "weapons.0.bullet.damage": 18,
-      "weapons.2.bullet.damage": 12,
+      "weapons.0.bullet.damage": 12,
+      "weapons.2.bullet.damage": 6,
       "armor": 6
     },
     "cleroi": {
@@ -121,7 +121,7 @@
     "anthicus": {
       "health": 880,
       "weapons.0.bullet.spawnUnit.weapons.0.bullet.splashDamage": 80,
-      "weapons.0.bullet.spawnUnit.speed": 2.1,
+      "weapons.0.bullet.spawnUnit.speed": 2.3,
       "armor": 12
     },
     "antumbra": {
@@ -163,6 +163,14 @@
     },
     "toxopid": {
       "health": 9800,
+      "abilities.+=": [
+        {
+          "type": "SpawnDeathAbility",
+          "amount": 12,
+          "type": "arkyid",
+          "spread": 64
+        }
+      ],
       "armor": 36
     },
     "aegires": {
@@ -176,20 +184,49 @@
       "armor": 36
     },
     "collaris": {
-      "health": 9400,
+      "health": 8400,
       "weapons.0.bullet.damage": 150,
       "weapons.0.bullet.splashDamage": 30,
       "weapons.0.bullet.fragBullet.damage": 17,
       "weapons.0.bullet.fragBullet.splashDamage": 7,
+      "abilities.+=": [{
+          "type": "UnitSpawnAbility",
+          "spawnTime": 1800,
+          "unit": "flare",
+          "spawnX": 0,
+          "spawnY": -8
+        }
+      ],
       "armor": 36
+    },
+    "flare": {
+      "health": 10,
+      "fogRadius": 61,
+      "speed": 3.6
     },
     "eclipse": {
       "health": 10600,
+      "abilities.+=": [{
+          "type": "StatusFieldAbility",
+          "duration": 120,
+          "effect": "overclock",
+          "reload": 100,
+          "range": 80
+        }
+      ],
       "armor": 36
     },
     "conquer": {
       "health": 15800,
       "flying": true,
+      "abilities.+=": [{
+          "type": "ForceFieldAbility",
+          "radius": 120,
+          "regen": 1.25,
+          "max": 6000,
+          "cooldown": 120
+        }
+      ],
       "armor": 42
     }
   }

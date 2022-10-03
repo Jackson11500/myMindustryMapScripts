@@ -1,4 +1,5 @@
 @file:Depends("coreMindustry/utilNext", "调用菜单")
+@file:Depends("coreMindustry/utilMapRule", "修改核心单位,单位属性")
 @file:Depends("coreMindustry/contentsTweaker", "修改核心单位,单位属性")
 
 package mapScript
@@ -627,205 +628,243 @@ suspend fun Player.lordMenu(core: CoreBuild) {
         )
     }
 }
+
 onEnable{
     //contextScript<coreMindustry.ContentsTweaker>().addPatch("LordOfWar", dataDirectory.child("contents-patch").child("14668.json").readString())
     contextScript<coreMindustry.ContentsTweaker>().addPatch("Lord Of War",
             "{\n" +
-            "  \"block\": {\n" +
-            "    \"core-shard\": {\n" +
-            "      \"health\": 2000,\n" +
-            "      \"armor\": 10\n" +
-            "    },\n" +
-            "    \"core-foundation\": {\n" +
-            "      \"unitType\": \"alpha\",\n" +
-            "      \"health\": 400,\n" +
-            "      \"armor\": 15\n" +
-            "    },\n" +
-            "    \"core-bastion\": {\n" +
-            "      \"unitType\": \"alpha\",\n" +
-            "      \"health\": 8000,\n" +
-            "      \"armor\": 20\n" +
-            "    },\n" +
-            "    \"core-nucleus\": {\n" +
-            "      \"unitType\": \"alpha\",\n" +
-            "      \"health\": 12000,\n" +
-            "      \"armor\": 25\n" +
-            "    },\n" +
-            "    \"core-citadel\": {\n" +
-            "      \"unitType\": \"alpha\",\n" +
-            "      \"health\": 32000,\n" +
-            "      \"armor\": 30\n" +
-            "    },\n" +
-            "    \"core-acropolis\": {\n" +
-            "      \"unitType\": \"alpha\",\n" +
-            "      \"health\": 8000,\n" +
-            "      \"armor\": 20\n" +
-            "    }\n" +
-            "  },\n" +
-            "  \"unit\": {\n" +
-            "    \"dagger\": {\n" +
-            "      \"armor\": 0\n" +
-            "    },\n" +
-            "    \"nova\": {\n" +
-            "      \"armor\": 0\n" +
-            "    },\n" +
-            "    \"merui\": {\n" +
-            "      \"health\": 120,\n" +
-            "      \"armor\": 0\n" +
-            "    },\n" +
-            "    \"elude\": {\n" +
-            "      \"health\": 120,\n" +
-            "      \"weapons.0.bullet.damage\": 6,\n" +
-            "      \"armor\": 0\n" +
-            "    },\n" +
-            "    \"stell\": {\n" +
-            "      \"health\": 120,\n" +
-            "      \"weapons.0.bullet.damage\": 12,\n" +
-            "      \"armor\": 0\n" +
-            "    },\n" +
-            "    \"pulsar\": {\n" +
-            "      \"health\": 360,\n" +
-            "      \"weapons.0.bullet.damage\": 18,\n" +
-            "      \"armor\": 3\n" +
-            "    },\n" +
-            "    \"poly\": {\n" +
-            "      \"health\": 360,\n" +
-            "      \"weapons.0.bullet.damage\": 12,\n" +
-            "      \"armor\": 3\n" +
-            "    },\n" +
-            "    \"atrax\": {\n" +
-            "      \"health\": 360,\n" +
-            "      \"weapons.0.bullet.damage\": 18,\n" +
-            "      \"armor\": 3\n" +
-            "    },\n" +
-            "    \"avert\": {\n" +
-            "      \"health\": 360,\n" +
-            "      \"weapons.0.bullet.damage\": 14,\n" +
-            "      \"armor\": 3\n" +
-            "    },\n" +
-            "    \"locus\": {\n" +
-            "      \"health\": 360,\n" +
-            "      \"weapons.0.bullet.damage\": 12,\n" +
-            "      \"armor\": 6\n" +
-            "    },\n" +
-            "    \"mace\": {\n" +
-            "      \"health\": 620,\n" +
-            "      \"weapons.0.bullet.damage\": 48,\n" +
-            "      \"armor\": 6\n" +
-            "    },\n" +
-            "    \"mega\": {\n" +
-            "      \"health\": 320,\n" +
-            "      \"weapons.0.bullet.damage\": 18,\n" +
-            "      \"weapons.2.bullet.damage\": 12,\n" +
-            "      \"armor\": 6\n" +
-            "    },\n" +
-            "    \"cleroi\": {\n" +
-            "      \"health\": 460,\n" +
-            "      \"weapons.2.bullet.damage\": 12,\n" +
-            "      \"armor\": 6\n" +
-            "    },\n" +
-            "    \"zenith\": {\n" +
-            "      \"health\": 420,\n" +
-            "      \"weapons.0.bullet.damage\": 32,\n" +
-            "      \"armor\": 6\n" +
-            "    },\n" +
-            "    \"precept\": {\n" +
-            "      \"health\": 840,\n" +
-            "      \"weapons.0.bullet.damage\": 32,\n" +
-            "      \"weapons.0.bullet.splashDamage\": 16,\n" +
-            "      \"weapons.0.bullet.fragBullet.damage\": 8,\n" +
-            "      \"armor\": 12\n" +
-            "    },\n" +
-            "    \"spiroct\": {\n" +
-            "      \"health\": 420,\n" +
-            "      \"weapons.0.bullet.damage\": 37,\n" +
-            "      \"weapons.0.bullet.sapStrength\": 0,\n" +
-            "      \"weapons.2.bullet.damage\": 33,\n" +
-            "      \"weapons.2.bullet.sapStrength\": 0,\n" +
-            "      \"armor\": 12\n" +
-            "    },\n" +
-            "    \"cyerce\": {\n" +
-            "      \"health\": 860,\n" +
-            "      \"weapons.0.bullet.damage\": 70,\n" +
-            "      \"flying\": true,\n" +
-            "      \"armor\": 12\n" +
-            "    },\n" +
-            "    \"anthicus\": {\n" +
-            "      \"health\": 880,\n" +
-            "      \"weapons.0.bullet.spawnUnit.weapons.0.bullet.splashDamage\": 80,\n" +
-            "      \"weapons.0.bullet.spawnUnit.speed\": 2.1,\n" +
-            "      \"armor\": 12\n" +
-            "    },\n" +
-            "    \"antumbra\": {\n" +
-            "      \"health\": 860,\n" +
-            "      \"armor\": 12\n" +
-            "    },\n" +
-            "    \"vanquish\": {\n" +
-            "      \"health\": 1460,\n" +
-            "      \"weapons.0.bullet.damage\": 65,\n" +
-            "      \"weapons.0.bullet.splashDamage\": 26,\n" +
-            "      \"armor\": 18\n" +
-            "    },\n" +
-            "    \"arkyid\": {\n" +
-            "      \"health\": 2140,\n" +
-            "      \"weapons.0.bullet.sapStrength\": 0,\n" +
-            "      \"armor\": 18\n" +
-            "    },\n" +
-            "    \"vela\": {\n" +
-            "      \"health\": 1860,\n" +
-            "      \"armor\": 18\n" +
-            "    },\n" +
-            "    \"tecta\": {\n" +
-            "      \"health\": 1460,\n" +
-            "      \"armor\": 18\n" +
-            "    },\n" +
-            "    \"sei\": {\n" +
-            "      \"health\": 1640,\n" +
-            "      \"weapons.0.bullet.damage\": 21,\n" +
-            "      \"weapons.0.bullet.splashDamage\": 23,\n" +
-            "      \"weapons.2.bullet.damage\": 35,\n" +
-            "      \"flying\": true,\n" +
-            "      \"armor\": 18\n" +
-            "    },\n" +
-            "    \"scepter\": {\n" +
-            "      \"health\": 2680,\n" +
-            "      \"weapons.2.bullet.status\": \"wet\",\n" +
-            "      \"weapons.2.bullet.statusDuration\": 2.5,\n" +
-            "      \"armor\": 36\n" +
-            "    },\n" +
-            "    \"toxopid\": {\n" +
-            "      \"health\": 9800,\n" +
-            "      \"armor\": 36\n" +
-            "    },\n" +
-            "    \"aegires\": {\n" +
-            "      \"health\": 7800,\n" +
-            "      \"abilities.0\": {\n" +
-            "        \"damage\": 80,\n" +
-            "        \"maxTargets\": 80,\n" +
-            "        \"healPercent\": 4\n" +
-            "      },\n" +
-            "      \"flying\": true,\n" +
-            "      \"armor\": 36\n" +
-            "    },\n" +
-            "    \"collaris\": {\n" +
-            "      \"health\": 9400,\n" +
-            "      \"weapons.0.bullet.damage\": 150,\n" +
-            "      \"weapons.0.bullet.splashDamage\": 30,\n" +
-            "      \"weapons.0.bullet.fragBullet.damage\": 17,\n" +
-            "      \"weapons.0.bullet.fragBullet.splashDamage\": 7,\n" +
-            "      \"armor\": 36\n" +
-            "    },\n" +
-            "    \"eclipse\": {\n" +
-            "      \"health\": 10600,\n" +
-            "      \"armor\": 36\n" +
-            "    },\n" +
-            "    \"conquer\": {\n" +
-            "      \"health\": 15800,\n" +
-            "      \"flying\": true,\n" +
-            "      \"armor\": 42\n" +
-            "    }\n" +
-            "  }\n" +
-            "}"
+                    "  \"block\": {\n" +
+                    "    \"core-shard\": {\n" +
+                    "      \"health\": 2000,\n" +
+                    "      \"armor\": 10\n" +
+                    "    },\n" +
+                    "    \"core-foundation\": {\n" +
+                    "      \"unitType\": \"alpha\",\n" +
+                    "      \"health\": 400,\n" +
+                    "      \"armor\": 15\n" +
+                    "    },\n" +
+                    "    \"core-bastion\": {\n" +
+                    "      \"unitType\": \"alpha\",\n" +
+                    "      \"health\": 8000,\n" +
+                    "      \"armor\": 20\n" +
+                    "    },\n" +
+                    "    \"core-nucleus\": {\n" +
+                    "      \"unitType\": \"alpha\",\n" +
+                    "      \"health\": 12000,\n" +
+                    "      \"armor\": 25\n" +
+                    "    },\n" +
+                    "    \"core-citadel\": {\n" +
+                    "      \"unitType\": \"alpha\",\n" +
+                    "      \"health\": 32000,\n" +
+                    "      \"armor\": 30\n" +
+                    "    },\n" +
+                    "    \"core-acropolis\": {\n" +
+                    "      \"unitType\": \"alpha\",\n" +
+                    "      \"health\": 8000,\n" +
+                    "      \"armor\": 20\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  \"unit\": {\n" +
+                    "    \"dagger\": {\n" +
+                    "      \"armor\": 0\n" +
+                    "    },\n" +
+                    "    \"nova\": {\n" +
+                    "      \"armor\": 0\n" +
+                    "    },\n" +
+                    "    \"merui\": {\n" +
+                    "      \"health\": 120,\n" +
+                    "      \"armor\": 0\n" +
+                    "    },\n" +
+                    "    \"elude\": {\n" +
+                    "      \"health\": 120,\n" +
+                    "      \"weapons.0.bullet.damage\": 6,\n" +
+                    "      \"armor\": 0\n" +
+                    "    },\n" +
+                    "    \"stell\": {\n" +
+                    "      \"health\": 120,\n" +
+                    "      \"weapons.0.bullet.damage\": 12,\n" +
+                    "      \"armor\": 0\n" +
+                    "    },\n" +
+                    "    \"pulsar\": {\n" +
+                    "      \"health\": 360,\n" +
+                    "      \"weapons.0.bullet.damage\": 18,\n" +
+                    "      \"armor\": 3\n" +
+                    "    },\n" +
+                    "    \"poly\": {\n" +
+                    "      \"health\": 360,\n" +
+                    "      \"weapons.0.bullet.damage\": 12,\n" +
+                    "      \"armor\": 3\n" +
+                    "    },\n" +
+                    "    \"atrax\": {\n" +
+                    "      \"health\": 360,\n" +
+                    "      \"weapons.0.bullet.damage\": 18,\n" +
+                    "      \"armor\": 3\n" +
+                    "    },\n" +
+                    "    \"avert\": {\n" +
+                    "      \"health\": 360,\n" +
+                    "      \"weapons.0.bullet.damage\": 14,\n" +
+                    "      \"armor\": 3\n" +
+                    "    },\n" +
+                    "    \"locus\": {\n" +
+                    "      \"health\": 360,\n" +
+                    "      \"weapons.0.bullet.damage\": 12,\n" +
+                    "      \"armor\": 6\n" +
+                    "    },\n" +
+                    "    \"mace\": {\n" +
+                    "      \"health\": 620,\n" +
+                    "      \"weapons.0.bullet.damage\": 48,\n" +
+                    "      \"armor\": 6\n" +
+                    "    },\n" +
+                    "    \"mega\": {\n" +
+                    "      \"health\": 320,\n" +
+                    "      \"weapons.0.bullet.damage\": 12,\n" +
+                    "      \"weapons.2.bullet.damage\": 6,\n" +
+                    "      \"armor\": 6\n" +
+                    "    },\n" +
+                    "    \"cleroi\": {\n" +
+                    "      \"health\": 460,\n" +
+                    "      \"weapons.2.bullet.damage\": 12,\n" +
+                    "      \"armor\": 6\n" +
+                    "    },\n" +
+                    "    \"zenith\": {\n" +
+                    "      \"health\": 420,\n" +
+                    "      \"weapons.0.bullet.damage\": 32,\n" +
+                    "      \"armor\": 6\n" +
+                    "    },\n" +
+                    "    \"precept\": {\n" +
+                    "      \"health\": 840,\n" +
+                    "      \"weapons.0.bullet.damage\": 32,\n" +
+                    "      \"weapons.0.bullet.splashDamage\": 16,\n" +
+                    "      \"weapons.0.bullet.fragBullet.damage\": 8,\n" +
+                    "      \"armor\": 12\n" +
+                    "    },\n" +
+                    "    \"spiroct\": {\n" +
+                    "      \"health\": 420,\n" +
+                    "      \"weapons.0.bullet.damage\": 37,\n" +
+                    "      \"weapons.0.bullet.sapStrength\": 0,\n" +
+                    "      \"weapons.2.bullet.damage\": 33,\n" +
+                    "      \"weapons.2.bullet.sapStrength\": 0,\n" +
+                    "      \"armor\": 12\n" +
+                    "    },\n" +
+                    "    \"cyerce\": {\n" +
+                    "      \"health\": 860,\n" +
+                    "      \"weapons.0.bullet.damage\": 70,\n" +
+                    "      \"flying\": true,\n" +
+                    "      \"armor\": 12\n" +
+                    "    },\n" +
+                    "    \"anthicus\": {\n" +
+                    "      \"health\": 880,\n" +
+                    "      \"weapons.0.bullet.spawnUnit.weapons.0.bullet.splashDamage\": 80,\n" +
+                    "      \"weapons.0.bullet.spawnUnit.speed\": 2.3,\n" +
+                    "      \"armor\": 12\n" +
+                    "    },\n" +
+                    "    \"antumbra\": {\n" +
+                    "      \"health\": 860,\n" +
+                    "      \"armor\": 12\n" +
+                    "    },\n" +
+                    "    \"vanquish\": {\n" +
+                    "      \"health\": 1460,\n" +
+                    "      \"weapons.0.bullet.damage\": 65,\n" +
+                    "      \"weapons.0.bullet.splashDamage\": 26,\n" +
+                    "      \"armor\": 18\n" +
+                    "    },\n" +
+                    "    \"arkyid\": {\n" +
+                    "      \"health\": 2140,\n" +
+                    "      \"weapons.0.bullet.sapStrength\": 0,\n" +
+                    "      \"armor\": 18\n" +
+                    "    },\n" +
+                    "    \"vela\": {\n" +
+                    "      \"health\": 1860,\n" +
+                    "      \"armor\": 18\n" +
+                    "    },\n" +
+                    "    \"tecta\": {\n" +
+                    "      \"health\": 1460,\n" +
+                    "      \"armor\": 18\n" +
+                    "    },\n" +
+                    "    \"sei\": {\n" +
+                    "      \"health\": 1640,\n" +
+                    "      \"weapons.0.bullet.damage\": 21,\n" +
+                    "      \"weapons.0.bullet.splashDamage\": 23,\n" +
+                    "      \"weapons.2.bullet.damage\": 35,\n" +
+                    "      \"flying\": true,\n" +
+                    "      \"armor\": 18\n" +
+                    "    },\n" +
+                    "    \"scepter\": {\n" +
+                    "      \"health\": 2680,\n" +
+                    "      \"weapons.2.bullet.status\": \"wet\",\n" +
+                    "      \"weapons.2.bullet.statusDuration\": 2.5,\n" +
+                    "      \"armor\": 36\n" +
+                    "    },\n" +
+                    "    \"toxopid\": {\n" +
+                    "      \"health\": 9800,\n" +
+                    "      \"abilities.+=\": [\n" +
+                    "        {\n" +
+                    "          \"type\": \"SpawnDeathAbility\",\n" +
+                    "          \"amount\": 12,\n" +
+                    "          \"type\": \"arkyid\",\n" +
+                    "          \"spread\": 64\n" +
+                    "        }\n" +
+                    "      ],\n" +
+                    "      \"armor\": 36\n" +
+                    "    },\n" +
+                    "    \"aegires\": {\n" +
+                    "      \"health\": 7800,\n" +
+                    "      \"abilities.0\": {\n" +
+                    "        \"damage\": 80,\n" +
+                    "        \"maxTargets\": 80,\n" +
+                    "        \"healPercent\": 4\n" +
+                    "      },\n" +
+                    "      \"flying\": true,\n" +
+                    "      \"armor\": 36\n" +
+                    "    },\n" +
+                    "    \"collaris\": {\n" +
+                    "      \"health\": 8400,\n" +
+                    "      \"weapons.0.bullet.damage\": 150,\n" +
+                    "      \"weapons.0.bullet.splashDamage\": 30,\n" +
+                    "      \"weapons.0.bullet.fragBullet.damage\": 17,\n" +
+                    "      \"weapons.0.bullet.fragBullet.splashDamage\": 7,\n" +
+                    "      \"abilities.+=\": [{\n" +
+                    "          \"type\": \"UnitSpawnAbility\",\n" +
+                    "          \"spawnTime\": 1800,\n" +
+                    "          \"unit\": \"flare\",\n" +
+                    "          \"spawnX\": 0,\n" +
+                    "          \"spawnY\": -8\n" +
+                    "        }\n" +
+                    "      ],\n" +
+                    "      \"armor\": 36\n" +
+                    "    },\n" +
+                    "    \"flare\": {\n" +
+                    "      \"health\": 10,\n" +
+                    "      \"fogRadius\": 61,\n" +
+                    "      \"speed\": 3.6\n" +
+                    "    },\n" +
+                    "    \"eclipse\": {\n" +
+                    "      \"health\": 10600,\n" +
+                    "      \"abilities.+=\": [{\n" +
+                    "          \"type\": \"StatusFieldAbility\",\n" +
+                    "          \"duration\": 120,\n" +
+                    "          \"effect\": \"overclock\",\n" +
+                    "          \"reload\": 100,\n" +
+                    "          \"range\": 80\n" +
+                    "        }\n" +
+                    "      ],\n" +
+                    "      \"armor\": 36\n" +
+                    "    },\n" +
+                    "    \"conquer\": {\n" +
+                    "      \"health\": 15800,\n" +
+                    "      \"flying\": true,\n" +
+                    "      \"abilities.+=\": [{\n" +
+                    "          \"type\": \"ForceFieldAbility\",\n" +
+                    "          \"radius\": 120,\n" +
+                    "          \"regen\": 1.25,\n" +
+                    "          \"max\": 6000,\n" +
+                    "          \"cooldown\": 120\n" +
+                    "        }\n" +
+                    "      ],\n" +
+                    "      \"armor\": 42\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "}"
     )
     loop(Dispatchers.game){
         state.teams.getActive().forEach {
@@ -899,7 +938,7 @@ listen<EventType.TapEvent> {
         launch(Dispatchers.game) { player.cityMenu(it.tile.build as CoreBuild) }
     }
 }
-
+UnitTypes.oct
 listen<EventType.UnitControlEvent> {
     val unit: mindustry.gen.Unit = it.unit ?: return@listen
     val owner = unit.owner() ?: return@listen
