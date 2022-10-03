@@ -15,4 +15,12 @@
 #### [ContentsTweaker](https://github.com/way-zer/ContentsTweaker/releases)
 
 #### ~~[ContentsPatch](https://github.com/xkldklp/myMindustryMapScripts/blob/main/14668LordOfWar/14668.json)~~ ContentsPatch已内置
-~~WayZer:可以，但不建议，这样子，以后的mapscript分发会更加麻烦~~
+
+##### ~~WayZer:可以，但不建议，这样子，以后的mapscript分发会更加麻烦~~
+
+### 多人游戏严重性能问题警告！
+- ~~复杂度核心数*玩家人数的含金量你知道吗(~~
+
+#### 如果你的服务器根本跑不动我这狗屎优化版本
+- 我建议直接vWayZer6*30向他购买优化后版本
+- 理解一下 毕竟重构屎山很花时间的(

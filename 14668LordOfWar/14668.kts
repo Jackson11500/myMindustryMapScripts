@@ -1,10 +1,8 @@
 @file:Depends("coreMindustry/utilNext", "调用菜单")
-@file:Depends("coreMindustry/utilMapRule", "修改核心单位,单位属性")
+@file:Depends("coreMindustry/contentsTweaker", "修改核心单位,单位属性")
 
 package mapScript
 
-import arc.graphics.Color
-import arc.graphics.Colors
 import arc.struct.ObjectIntMap
 import arc.util.Time
 import arc.util.Tmp
@@ -21,8 +19,6 @@ import mindustry.content.Items
 import mindustry.content.StatusEffects
 import mindustry.content.UnitTypes
 import mindustry.entities.Units
-import mindustry.entities.abilities.EnergyFieldAbility
-import mindustry.entities.bullet.SapBulletType
 import mindustry.game.EventType
 import mindustry.game.Team
 import mindustry.gen.Call
@@ -332,7 +328,7 @@ suspend fun Player.cityMenu(core: CoreBuild) {
                     tile.setNet(target, core.team, 0)
                     (tile.build as CoreBuild).setCoin(coins - cost)
                     (tile.build as CoreBuild).lord(uuid())
-                    broadcast("[#${core.team.color}]位于[${World.toTile(core.x)},${World.toTile(core.y)}]的 ${core.block.emoji()} 已经被[white] $name [#${core.team.color}]升级为 ${tile.build.block.emoji()}[white]${(tile.build as CoreBuild).levelText()}".with(), quite = true)
+                    Call.sendMessage("[#${core.team.color}]位于[${World.toTile(core.x)},${World.toTile(core.y)}]的 ${core.block.emoji()} 已经被[white] $name [#${core.team.color}]升级为 ${tile.build.block.emoji()}[white]${(tile.build as CoreBuild).levelText()}")
                 }
             })
         }
@@ -428,7 +424,7 @@ suspend fun Player.warMenu(core: CoreBuild) {
                             val randomUnit = LordUnits.random()
                             lordUnitType(randomUnit)
                             Call.announce(con, "[cyan]抽取领主级单位:[white]${randomUnit.emoji()}")
-                            broadcast("[white]$name [#${team().color}]抽取了领主级单位${randomUnit.emoji()}!".with(), quite = true)
+                            Call.sendMessage("[white]$name [#${team().color}]抽取了领主级单位${randomUnit.emoji()}!")
                             warMenu(core)
                         }
                     )
@@ -439,9 +435,10 @@ suspend fun Player.warMenu(core: CoreBuild) {
                             if (coins() >= lordUnitType().cost()){
                                 if (createLordUnit(core)) {
                                     removeCoin(lordUnitType().cost())
-                                    broadcast("$name [#${team().color}]领主级单位${lordUnitType()!!.emoji()}准备出征!".with(), quite = true)
+                                    Call.sendMessage("$name [#${team().color}]领主级单位${lordUnitType()!!.emoji()}准备出征!")
                                     Call.announce(con, "[red]Tips退出领主级单位将直接消失！")
                                     setLordCooldown(900f)
+                                    lordUnitType(lordUnitType().levelUnits()!!.random())
                                     warMenu(core)
                                 } else {
                                     sendMessage("[red]生成失败！")
@@ -501,7 +498,7 @@ suspend fun Player.bankMenu(core: CoreBuild) {
                     if (fail) {
                         sendMessage("存钱失败！")
                     } else {
-                        broadcast("$name [#${team().color}]往队伍银行存储${Iconc.blockCliff}$coin".with("coin" to coin), quite = true)
+                        Call.sendMessage("$name [#${team().color}]往队伍银行存储${Iconc.blockCliff}$coin")
                     }
 
             },
@@ -530,7 +527,7 @@ suspend fun Player.bankMenu(core: CoreBuild) {
                     if (fail) {
                         sendMessage("取钱失败！")
                     } else {
-                        broadcast("$name [#${team().color}]往队伍银行取出${Iconc.blockCliff}$coin".with("coin" to coin), quite = true)
+                        Call.sendMessage("$name [#${team().color}]往队伍银行取出${Iconc.blockCliff}$coin")
                     }
                 } else {
                     sendMessage("[red]队伍银行没钱给你取！")
@@ -579,7 +576,7 @@ suspend fun Player.lordMenu(core: CoreBuild) {
                     if (coins() >= team().rules().blockHealthMultiplier.getRulesCost(40)) {
                         removeCoin(team().rules().blockHealthMultiplier.getRulesCost(40).toInt())
                         team().rules().blockHealthMultiplier += 0.05f
-                        broadcast("[white]$name [#${team().color}]购买了建筑血量(${(team().rules().blockHealthMultiplier - 0.05f).format()} -> ${team().rules().blockHealthMultiplier.format()}}".with(), quite = true)
+                        Call.sendMessage("[white]$name [#${team().color}]购买了建筑血量(${(team().rules().blockHealthMultiplier - 0.05f).format()} -> ${team().rules().blockHealthMultiplier.format()}}")
                         lordMenu(core)
                     } else {
                         sendMessage("[red]金钱不足！")
@@ -589,7 +586,7 @@ suspend fun Player.lordMenu(core: CoreBuild) {
                     if (coins() >= team().rules().blockDamageMultiplier.getRulesCost(40)) {
                         removeCoin(team().rules().blockDamageMultiplier.getRulesCost(40).toInt())
                         team().rules().blockDamageMultiplier += 0.05f
-                        broadcast("[white]$name [#${team().color}]购买了建筑攻击(${(team().rules().blockDamageMultiplier - 0.05f).format()} -> ${team().rules().blockDamageMultiplier.format()}}".with(), quite = true)
+                        Call.sendMessage("[white]$name [#${team().color}]购买了建筑攻击(${(team().rules().blockDamageMultiplier - 0.05f).format()} -> ${team().rules().blockDamageMultiplier.format()}}")
                         lordMenu(core)
                     } else {
                         sendMessage("[red]金钱不足！")
@@ -601,7 +598,7 @@ suspend fun Player.lordMenu(core: CoreBuild) {
                     if (coins() >= team().rules().buildSpeedMultiplier.getRulesCost(25)) {
                         removeCoin(team().rules().buildSpeedMultiplier.getRulesCost(25).toInt())
                         team().rules().buildSpeedMultiplier += 0.05f
-                        broadcast("[white]$name [#${team().color}]购买了建筑速度(${(team().rules().buildSpeedMultiplier - 0.05f).format()} -> ${team().rules().buildSpeedMultiplier.format()}}".with(), quite = true)
+                        Call.sendMessage("[white]$name [#${team().color}]购买了建筑速度(${(team().rules().buildSpeedMultiplier - 0.05f).format()} -> ${team().rules().buildSpeedMultiplier.format()}}")
                         lordMenu(core)
                     } else {
                         sendMessage("[red]金钱不足！")
@@ -611,7 +608,7 @@ suspend fun Player.lordMenu(core: CoreBuild) {
                     if (coins() >= team().rules().unitDamageMultiplier.getRulesCost(45)) {
                         removeCoin(team().rules().unitDamageMultiplier.getRulesCost(45).toInt())
                         team().rules().unitDamageMultiplier += 0.05f
-                        broadcast("[white]$name [#${team().color}]购买了单位攻击(${(team().rules().unitDamageMultiplier - 0.05f).format()} -> ${team().rules().unitDamageMultiplier.format()}}".with(), quite = true)
+                        Call.sendMessage("[white]$name [#${team().color}]购买了单位攻击(${(team().rules().unitDamageMultiplier - 0.05f).format()} -> ${team().rules().unitDamageMultiplier.format()}}")
                         lordMenu(core)
                     } else {
                         sendMessage("[red]金钱不足！")
@@ -631,184 +628,205 @@ suspend fun Player.lordMenu(core: CoreBuild) {
     }
 }
 onEnable{
-    contextScript<coreMindustry.UtilMapRule>().apply {
-        //registerMapRule((Blocks.coreShard as CoreBlock)::unitType) { UnitTypes.alpha }
-        registerMapRule((Blocks.coreShard as CoreBlock)::health) { 2000 }
-        registerMapRule((Blocks.coreShard as CoreBlock)::armor) { 10f }
-        registerMapRule((Blocks.coreFoundation as CoreBlock)::unitType) { UnitTypes.alpha }
-        registerMapRule((Blocks.coreFoundation as CoreBlock)::health) { 4000 }
-        registerMapRule((Blocks.coreFoundation as CoreBlock)::armor) { 15f }
-        registerMapRule((Blocks.coreBastion as CoreBlock)::unitType) { UnitTypes.alpha }
-        registerMapRule((Blocks.coreBastion as CoreBlock)::health) { 8000 }
-        registerMapRule((Blocks.coreBastion as CoreBlock)::armor) { 20f }
-        registerMapRule((Blocks.coreNucleus as CoreBlock)::unitType) { UnitTypes.alpha }
-        registerMapRule((Blocks.coreNucleus as CoreBlock)::health) { 12000 }
-        registerMapRule((Blocks.coreNucleus as CoreBlock)::armor) { 25f }
-        registerMapRule((Blocks.coreCitadel as CoreBlock)::unitType) { UnitTypes.alpha }
-        registerMapRule((Blocks.coreCitadel as CoreBlock)::health) { 32000 }
-        registerMapRule((Blocks.coreCitadel as CoreBlock)::armor) { 30f }
-        registerMapRule((Blocks.coreAcropolis as CoreBlock)::unitType) { UnitTypes.alpha }
-        registerMapRule((Blocks.coreAcropolis as CoreBlock)::health) { 64000 }
-        registerMapRule((Blocks.coreAcropolis as CoreBlock)::armor) { 40f }
-
-        T1Units.forEach {
-            registerMapRule(it::armor) { 0f }
-        }
-        T2Units.forEach {
-            registerMapRule(it::armor) { 3f }
-        }
-        T3Units.forEach {
-            registerMapRule(it::armor) { 6f }
-        }
-        T4Units.forEach {
-            registerMapRule(it::armor) { 12f }
-        }
-        T5Units.forEach {
-            registerMapRule(it::armor) { 18f }
-        }
-        LordUnits.forEach {
-            registerMapRule(it::armor) { 36f }
-        }
-
-        //T1START
-        var unitType = UnitTypes.merui
-        registerMapRule(unitType::health) { 120f }
-
-        unitType = UnitTypes.elude
-        registerMapRule(unitType::health) { 80f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 6f }
-
-        unitType = UnitTypes.stell
-        registerMapRule(unitType::health) { 220f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 12f }
-        registerMapRule(unitType::armor) { 3f }
-        //T1END
-        //T2START
-        unitType = UnitTypes.pulsar
-        registerMapRule(unitType::health) { 360f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 18f }
-
-        unitType = UnitTypes.poly
-        registerMapRule(unitType::health) { 250f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 12f }
-
-        unitType = UnitTypes.atrax
-        registerMapRule(unitType::health) { 260f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 18f }
-
-        unitType = UnitTypes.avert
-        registerMapRule(unitType::health) { 220f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 14f }
-
-        unitType = UnitTypes.locus
-        registerMapRule(unitType::health) { 480f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 12f }
-        registerMapRule(unitType::armor) { 6f }
-        //T2END
-        //T3START
-        unitType = UnitTypes.mace
-        registerMapRule(unitType::health) { 620f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 48f }
-
-        unitType = UnitTypes.mega
-        registerMapRule(unitType::health) { 320f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 18f }
-        registerMapRule(unitType.weapons.get(2).bullet::damage) { 12f }
-
-        unitType = UnitTypes.cleroi
-        registerMapRule(unitType::health) { 460f }
-
-        unitType = UnitTypes.zenith
-        registerMapRule(unitType::health) { 440f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 32f }
-
-        unitType = UnitTypes.precept
-        registerMapRule(unitType::health) { 840f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 32f }
-        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 16f }
-        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::damage) { 8f }
-        registerMapRule(unitType::armor) { 12f }
-        //T3END
-        //T4START
-        unitType = UnitTypes.spiroct
-        registerMapRule(unitType::health) { 960f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 47f }
-        registerMapRule(unitType.weapons.get(2).bullet::damage) { 43f }
-        registerMapRule((unitType.weapons.get(0).bullet as SapBulletType)::sapStrength) { 0f }
-        registerMapRule((unitType.weapons.get(2).bullet as SapBulletType)::sapStrength) { 0f }
-
-        unitType = UnitTypes.cyerce
-        registerMapRule(unitType::health) { 860f }
-        registerMapRule(unitType.weapons.get(0).bullet::maxRange) { 70f }
-        registerMapRule(unitType::flying) { true }
-
-        unitType = UnitTypes.anthicus
-        registerMapRule(unitType::health) { 880f }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit.weapons.get(0).bullet::splashDamage) { 80f }
-        registerMapRule(unitType.weapons.get(0).bullet.spawnUnit::speed) { 2.1f }
-
-        unitType = UnitTypes.antumbra
-        registerMapRule(unitType::health) { 860f }
-
-        unitType = UnitTypes.vanquish
-        registerMapRule(unitType::health) { 1460f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 65f }
-        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 26f }
-        registerMapRule(unitType::armor) { 18f }
-        //T4END
-        //T5START
-        unitType = UnitTypes.arkyid
-        registerMapRule(unitType::health) { 2140f }
-        registerMapRule((unitType.weapons.get(0).bullet as SapBulletType)::sapStrength) { 0f }
-
-        unitType = UnitTypes.vela
-        registerMapRule(unitType::health) { 1860f }
-
-        unitType = UnitTypes.tecta
-        registerMapRule(unitType::health) { 1460f }
-
-        unitType = UnitTypes.sei
-        registerMapRule(unitType::health) { 1640f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 21f }
-        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 23f }
-        registerMapRule(unitType.weapons.get(2).bullet::damage) { 35f }
-        registerMapRule(unitType::flying) { true }
-
-        unitType = UnitTypes.scepter
-        registerMapRule(unitType::health) { 2680f }
-        registerMapRule(unitType.weapons.get(1).bullet::status) { StatusEffects.wet }
-        registerMapRule(unitType.weapons.get(1).bullet::statusDuration) { 2.5f * 60f }
-        registerMapRule(unitType::armor) { 36f }
-        //T5END
-        //LORDSTART
-        unitType = UnitTypes.toxopid
-        registerMapRule(unitType::health) { 10800f }
-
-        unitType = UnitTypes.aegires
-        registerMapRule(unitType::health) { 7800f }
-        registerMapRule((unitType.abilities.get(0) as EnergyFieldAbility)::damage) { 70f }
-        registerMapRule((unitType.abilities.get(0) as EnergyFieldAbility)::maxTargets) { 80 }
-        registerMapRule((unitType.abilities.get(0) as EnergyFieldAbility)::healPercent) { 5f }
-        registerMapRule(StatusEffects.electrified::healthMultiplier) { 0.9f }
-        registerMapRule(StatusEffects.electrified::damageMultiplier) { 0.8f }
-        registerMapRule(StatusEffects.electrified::damage) { 0.9f }
-        registerMapRule(unitType::flying) { true }
-
-        unitType = UnitTypes.collaris
-        registerMapRule(unitType::health) { 9600f }
-        registerMapRule(unitType.weapons.get(0).bullet::damage) { 150f }
-        registerMapRule(unitType.weapons.get(0).bullet::splashDamage) { 30f }
-        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::damage) { 15f }
-        registerMapRule(unitType.weapons.get(0).bullet.fragBullet::splashDamage) { 5f }
-
-        unitType = UnitTypes.eclipse
-        registerMapRule(unitType::health) { 10600f }
-
-        unitType = UnitTypes.conquer
-        registerMapRule(unitType::health) { 16800f }
-        registerMapRule(unitType::armor) { 40f }
-        registerMapRule(unitType::flying) { true }
-    }
+    //contextScript<coreMindustry.ContentsTweaker>().addPatch("LordOfWar", dataDirectory.child("contents-patch").child("14668.json").readString())
+    contextScript<coreMindustry.ContentsTweaker>().addPatch("Lord Of War",
+            "{\n" +
+            "  \"block\": {\n" +
+            "    \"core-shard\": {\n" +
+            "      \"health\": 2000,\n" +
+            "      \"armor\": 10\n" +
+            "    },\n" +
+            "    \"core-foundation\": {\n" +
+            "      \"unitType\": \"alpha\",\n" +
+            "      \"health\": 400,\n" +
+            "      \"armor\": 15\n" +
+            "    },\n" +
+            "    \"core-bastion\": {\n" +
+            "      \"unitType\": \"alpha\",\n" +
+            "      \"health\": 8000,\n" +
+            "      \"armor\": 20\n" +
+            "    },\n" +
+            "    \"core-nucleus\": {\n" +
+            "      \"unitType\": \"alpha\",\n" +
+            "      \"health\": 12000,\n" +
+            "      \"armor\": 25\n" +
+            "    },\n" +
+            "    \"core-citadel\": {\n" +
+            "      \"unitType\": \"alpha\",\n" +
+            "      \"health\": 32000,\n" +
+            "      \"armor\": 30\n" +
+            "    },\n" +
+            "    \"core-acropolis\": {\n" +
+            "      \"unitType\": \"alpha\",\n" +
+            "      \"health\": 8000,\n" +
+            "      \"armor\": 20\n" +
+            "    }\n" +
+            "  },\n" +
+            "  \"unit\": {\n" +
+            "    \"dagger\": {\n" +
+            "      \"armor\": 0\n" +
+            "    },\n" +
+            "    \"nova\": {\n" +
+            "      \"armor\": 0\n" +
+            "    },\n" +
+            "    \"merui\": {\n" +
+            "      \"health\": 120,\n" +
+            "      \"armor\": 0\n" +
+            "    },\n" +
+            "    \"elude\": {\n" +
+            "      \"health\": 120,\n" +
+            "      \"weapons.0.bullet.damage\": 6,\n" +
+            "      \"armor\": 0\n" +
+            "    },\n" +
+            "    \"stell\": {\n" +
+            "      \"health\": 120,\n" +
+            "      \"weapons.0.bullet.damage\": 12,\n" +
+            "      \"armor\": 0\n" +
+            "    },\n" +
+            "    \"pulsar\": {\n" +
+            "      \"health\": 360,\n" +
+            "      \"weapons.0.bullet.damage\": 18,\n" +
+            "      \"armor\": 3\n" +
+            "    },\n" +
+            "    \"poly\": {\n" +
+            "      \"health\": 360,\n" +
+            "      \"weapons.0.bullet.damage\": 12,\n" +
+            "      \"armor\": 3\n" +
+            "    },\n" +
+            "    \"atrax\": {\n" +
+            "      \"health\": 360,\n" +
+            "      \"weapons.0.bullet.damage\": 18,\n" +
+            "      \"armor\": 3\n" +
+            "    },\n" +
+            "    \"avert\": {\n" +
+            "      \"health\": 360,\n" +
+            "      \"weapons.0.bullet.damage\": 14,\n" +
+            "      \"armor\": 3\n" +
+            "    },\n" +
+            "    \"locus\": {\n" +
+            "      \"health\": 360,\n" +
+            "      \"weapons.0.bullet.damage\": 12,\n" +
+            "      \"armor\": 6\n" +
+            "    },\n" +
+            "    \"mace\": {\n" +
+            "      \"health\": 620,\n" +
+            "      \"weapons.0.bullet.damage\": 48,\n" +
+            "      \"armor\": 6\n" +
+            "    },\n" +
+            "    \"mega\": {\n" +
+            "      \"health\": 320,\n" +
+            "      \"weapons.0.bullet.damage\": 18,\n" +
+            "      \"weapons.2.bullet.damage\": 12,\n" +
+            "      \"armor\": 6\n" +
+            "    },\n" +
+            "    \"cleroi\": {\n" +
+            "      \"health\": 460,\n" +
+            "      \"weapons.2.bullet.damage\": 12,\n" +
+            "      \"armor\": 6\n" +
+            "    },\n" +
+            "    \"zenith\": {\n" +
+            "      \"health\": 420,\n" +
+            "      \"weapons.0.bullet.damage\": 32,\n" +
+            "      \"armor\": 6\n" +
+            "    },\n" +
+            "    \"precept\": {\n" +
+            "      \"health\": 840,\n" +
+            "      \"weapons.0.bullet.damage\": 32,\n" +
+            "      \"weapons.0.bullet.splashDamage\": 16,\n" +
+            "      \"weapons.0.bullet.fragBullet.damage\": 8,\n" +
+            "      \"armor\": 12\n" +
+            "    },\n" +
+            "    \"spiroct\": {\n" +
+            "      \"health\": 420,\n" +
+            "      \"weapons.0.bullet.damage\": 37,\n" +
+            "      \"weapons.0.bullet.sapStrength\": 0,\n" +
+            "      \"weapons.2.bullet.damage\": 33,\n" +
+            "      \"weapons.2.bullet.sapStrength\": 0,\n" +
+            "      \"armor\": 12\n" +
+            "    },\n" +
+            "    \"cyerce\": {\n" +
+            "      \"health\": 860,\n" +
+            "      \"weapons.0.bullet.damage\": 70,\n" +
+            "      \"flying\": true,\n" +
+            "      \"armor\": 12\n" +
+            "    },\n" +
+            "    \"anthicus\": {\n" +
+            "      \"health\": 880,\n" +
+            "      \"weapons.0.bullet.spawnUnit.weapons.0.bullet.splashDamage\": 80,\n" +
+            "      \"weapons.0.bullet.spawnUnit.speed\": 2.1,\n" +
+            "      \"armor\": 12\n" +
+            "    },\n" +
+            "    \"antumbra\": {\n" +
+            "      \"health\": 860,\n" +
+            "      \"armor\": 12\n" +
+            "    },\n" +
+            "    \"vanquish\": {\n" +
+            "      \"health\": 1460,\n" +
+            "      \"weapons.0.bullet.damage\": 65,\n" +
+            "      \"weapons.0.bullet.splashDamage\": 26,\n" +
+            "      \"armor\": 18\n" +
+            "    },\n" +
+            "    \"arkyid\": {\n" +
+            "      \"health\": 2140,\n" +
+            "      \"weapons.0.bullet.sapStrength\": 0,\n" +
+            "      \"armor\": 18\n" +
+            "    },\n" +
+            "    \"vela\": {\n" +
+            "      \"health\": 1860,\n" +
+            "      \"armor\": 18\n" +
+            "    },\n" +
+            "    \"tecta\": {\n" +
+            "      \"health\": 1460,\n" +
+            "      \"armor\": 18\n" +
+            "    },\n" +
+            "    \"sei\": {\n" +
+            "      \"health\": 1640,\n" +
+            "      \"weapons.0.bullet.damage\": 21,\n" +
+            "      \"weapons.0.bullet.splashDamage\": 23,\n" +
+            "      \"weapons.2.bullet.damage\": 35,\n" +
+            "      \"flying\": true,\n" +
+            "      \"armor\": 18\n" +
+            "    },\n" +
+            "    \"scepter\": {\n" +
+            "      \"health\": 2680,\n" +
+            "      \"weapons.2.bullet.status\": \"wet\",\n" +
+            "      \"weapons.2.bullet.statusDuration\": 2.5,\n" +
+            "      \"armor\": 36\n" +
+            "    },\n" +
+            "    \"toxopid\": {\n" +
+            "      \"health\": 9800,\n" +
+            "      \"armor\": 36\n" +
+            "    },\n" +
+            "    \"aegires\": {\n" +
+            "      \"health\": 7800,\n" +
+            "      \"abilities.0\": {\n" +
+            "        \"damage\": 80,\n" +
+            "        \"maxTargets\": 80,\n" +
+            "        \"healPercent\": 4\n" +
+            "      },\n" +
+            "      \"flying\": true,\n" +
+            "      \"armor\": 36\n" +
+            "    },\n" +
+            "    \"collaris\": {\n" +
+            "      \"health\": 9400,\n" +
+            "      \"weapons.0.bullet.damage\": 150,\n" +
+            "      \"weapons.0.bullet.splashDamage\": 30,\n" +
+            "      \"weapons.0.bullet.fragBullet.damage\": 17,\n" +
+            "      \"weapons.0.bullet.fragBullet.splashDamage\": 7,\n" +
+            "      \"armor\": 36\n" +
+            "    },\n" +
+            "    \"eclipse\": {\n" +
+            "      \"health\": 10600,\n" +
+            "      \"armor\": 36\n" +
+            "    },\n" +
+            "    \"conquer\": {\n" +
+            "      \"health\": 15800,\n" +
+            "      \"flying\": true,\n" +
+            "      \"armor\": 42\n" +
+            "    }\n" +
+            "  }\n" +
+            "}"
+    )
     loop(Dispatchers.game){
         state.teams.getActive().forEach {
             it.cores.forEach { c ->
@@ -889,7 +907,7 @@ listen<EventType.UnitControlEvent> {
         it.player.clearUnit()
         Call.announce(it.player.con(),"[red]你不是该单位的领主！无法控制")
     }else{
-        launch {
+        launch(Dispatchers.game) {
             while(unit.isPlayer){
                 unit.apply(StatusEffects.boss)
                 unit.apply(StatusEffects.shielded, 1 * 60f)

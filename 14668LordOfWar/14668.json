@@ -179,8 +179,8 @@
       "health": 9400,
       "weapons.0.bullet.damage": 150,
       "weapons.0.bullet.splashDamage": 30,
-      "weapons.0.bullet.fragBullet.damage": 15,
-      "weapons.0.bullet.fragBullet.splashDamage": 5,
+      "weapons.0.bullet.fragBullet.damage": 17,
+      "weapons.0.bullet.fragBullet.splashDamage": 7,
       "armor": 36
     },
     "eclipse": {
