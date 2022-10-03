@@ -6,7 +6,7 @@
     },
     "core-foundation": {
       "unitType": "alpha",
-      "health": 400,
+      "health": 4000,
       "armor": 15
     },
     "core-bastion": {
@@ -26,7 +26,7 @@
     },
     "core-acropolis": {
       "unitType": "alpha",
-      "health": 8000,
+      "health": 80000,
       "armor": 20
     }
   },

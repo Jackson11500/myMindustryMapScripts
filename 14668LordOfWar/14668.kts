@@ -639,7 +639,7 @@ onEnable{
                     "    },\n" +
                     "    \"core-foundation\": {\n" +
                     "      \"unitType\": \"alpha\",\n" +
-                    "      \"health\": 400,\n" +
+                    "      \"health\": 4000,\n" +
                     "      \"armor\": 15\n" +
                     "    },\n" +
                     "    \"core-bastion\": {\n" +
@@ -659,7 +659,7 @@ onEnable{
                     "    },\n" +
                     "    \"core-acropolis\": {\n" +
                     "      \"unitType\": \"alpha\",\n" +
-                    "      \"health\": 8000,\n" +
+                    "      \"health\": 80000,\n" +
                     "      \"armor\": 20\n" +
                     "    }\n" +
                     "  },\n" +
