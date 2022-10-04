@@ -49,11 +49,12 @@
     "stell": {
       "health": 120,
       "weapons.0.bullet.damage": 14,
-      "armor": 0
+      "armor": 4
     },
     "pulsar": {
       "health": 360,
-      "weapons.0.bullet.damage": 18,
+      "weapons.0.bullet.damage": 9,
+      "weapons.0.bullet.lightningLengthRand": 0,
       "armor": 3
     },
     "poly": {
@@ -74,11 +75,11 @@
     "locus": {
       "health": 360,
       "weapons.0.bullet.damage": 12,
-      "armor": 6
+      "armor": 8
     },
     "mace": {
       "health": 620,
-      "weapons.0.bullet.damage": 48,
+      "weapons.0.bullet.damage": 38,
       "armor": 6
     },
     "mega": {
@@ -102,7 +103,7 @@
       "weapons.0.bullet.damage": 36,
       "weapons.0.bullet.splashDamage": 20,
       "weapons.0.bullet.fragBullet.damage": 12,
-      "armor": 12
+      "armor": 15
     },
     "spiroct": {
       "health": 460,
@@ -120,21 +121,20 @@
     "anthicus": {
       "health": 880,
       "weapons.0.bullet.spawnUnit.weapons.0.bullet.splashDamage": 80,
-      "weapons.0.bullet.spawnUnit.speed": 2.5,
       "armor": 12
     },
     "antumbra": {
       "health": 820,
       "weapons.0.bullet.damage": 11,
-      "weapons.0.bullet.splashDamage": 27,
-      "weapons.5.bullet.damage": 38,
+      "weapons.0.bullet.splashDamage": 23,
+      "weapons.5.bullet.damage": 25,
       "armor": 12
     },
     "vanquish": {
       "health": 1560,
       "weapons.0.bullet.damage": 85,
       "weapons.0.bullet.splashDamage": 35,
-      "armor": 18
+      "armor": 22
     },
     "arkyid": {
       "health": 2140,
@@ -166,9 +166,9 @@
       "abilities.+=": [
         {
           "type": "SpawnDeathAbility",
-          "amount": 12,
+          "amount": 28,
           "type": "arkyid",
-          "spread": 64
+          "spread": 72
         }
       ],
       "armor": 36
@@ -189,11 +189,11 @@
       "weapons.0.bullet.collidesAir": true,
       "weapons.0.bullet.damage": 150,
       "weapons.0.bullet.splashDamage": 30,
-      "weapons.0.bullet.fragBullet.damage": 17,
-      "weapons.0.bullet.fragBullet.splashDamage": 7,
+      "weapons.0.bullet.fragBullet.damage": 23,
+      "weapons.0.bullet.fragBullet.splashDamage": 16,
       "abilities.+=": [{
           "type": "UnitSpawnAbility",
-          "spawnTime": 1800,
+          "spawnTime": 900,
           "unit": "flare",
           "spawnX": 0,
           "spawnY": -8
@@ -203,8 +203,8 @@
     },
     "flare": {
       "health": 10,
-      "fogRadius": 64,
-      "speed": 3.6
+      "fogRadius": 48,
+      "speed": 5.2
     },
     "eclipse": {
       "health": 10600,
@@ -213,20 +213,20 @@
           "duration": 120,
           "effect": "overclock",
           "reload": 100,
-          "range": 80
+          "range": 240
         }
       ],
       "armor": 36
     },
     "conquer": {
-      "health": 15800,
+      "health": 12800,
       "flying": true,
       "abilities.+=": [{
           "type": "ForceFieldAbility",
-          "radius": 120,
-          "regen": 1.25,
-          "max": 8000,
-          "cooldown": 120
+          "radius": 200,
+          "regen": 4.8,
+          "max": 12000,
+          "cooldown": 240
         }
       ],
       "armor": 42

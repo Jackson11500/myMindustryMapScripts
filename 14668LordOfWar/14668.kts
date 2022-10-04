@@ -627,7 +627,6 @@ suspend fun Player.lordMenu(core: CoreBuild) {
         )
     }
 }
-UnitTypes.collaris.weapons.get(0).bullet.
 onEnable{
     //contextScript<coreMindustry.ContentsTweaker>().addPatch("LordOfWar", dataDirectory.child("contents-patch").child("14668.json").readString())
     contextScript<coreMindustry.ContentsTweaker>().addPatch("Lord Of War",
@@ -682,11 +681,12 @@ onEnable{
                    "    \"stell\": {\n" +
                    "      \"health\": 120,\n" +
                    "      \"weapons.0.bullet.damage\": 14,\n" +
-                   "      \"armor\": 0\n" +
+                   "      \"armor\": 4\n" +
                    "    },\n" +
                    "    \"pulsar\": {\n" +
                    "      \"health\": 360,\n" +
-                   "      \"weapons.0.bullet.damage\": 18,\n" +
+                   "      \"weapons.0.bullet.damage\": 9,\n" +
+                   "      \"weapons.0.bullet.lightningLengthRand\": 0,\n" +
                    "      \"armor\": 3\n" +
                    "    },\n" +
                    "    \"poly\": {\n" +
@@ -707,11 +707,11 @@ onEnable{
                    "    \"locus\": {\n" +
                    "      \"health\": 360,\n" +
                    "      \"weapons.0.bullet.damage\": 12,\n" +
-                   "      \"armor\": 6\n" +
+                   "      \"armor\": 8\n" +
                    "    },\n" +
                    "    \"mace\": {\n" +
                    "      \"health\": 620,\n" +
-                   "      \"weapons.0.bullet.damage\": 48,\n" +
+                   "      \"weapons.0.bullet.damage\": 38,\n" +
                    "      \"armor\": 6\n" +
                    "    },\n" +
                    "    \"mega\": {\n" +
@@ -735,7 +735,7 @@ onEnable{
                    "      \"weapons.0.bullet.damage\": 36,\n" +
                    "      \"weapons.0.bullet.splashDamage\": 20,\n" +
                    "      \"weapons.0.bullet.fragBullet.damage\": 12,\n" +
-                   "      \"armor\": 12\n" +
+                   "      \"armor\": 15\n" +
                    "    },\n" +
                    "    \"spiroct\": {\n" +
                    "      \"health\": 460,\n" +
@@ -753,21 +753,20 @@ onEnable{
                    "    \"anthicus\": {\n" +
                    "      \"health\": 880,\n" +
                    "      \"weapons.0.bullet.spawnUnit.weapons.0.bullet.splashDamage\": 80,\n" +
-                   "      \"weapons.0.bullet.spawnUnit.speed\": 2.5,\n" +
                    "      \"armor\": 12\n" +
                    "    },\n" +
                    "    \"antumbra\": {\n" +
                    "      \"health\": 820,\n" +
                    "      \"weapons.0.bullet.damage\": 11,\n" +
-                   "      \"weapons.0.bullet.splashDamage\": 27,\n" +
-                   "      \"weapons.5.bullet.damage\": 38,\n" +
+                   "      \"weapons.0.bullet.splashDamage\": 23,\n" +
+                   "      \"weapons.5.bullet.damage\": 25,\n" +
                    "      \"armor\": 12\n" +
                    "    },\n" +
                    "    \"vanquish\": {\n" +
                    "      \"health\": 1560,\n" +
                    "      \"weapons.0.bullet.damage\": 85,\n" +
                    "      \"weapons.0.bullet.splashDamage\": 35,\n" +
-                   "      \"armor\": 18\n" +
+                   "      \"armor\": 22\n" +
                    "    },\n" +
                    "    \"arkyid\": {\n" +
                    "      \"health\": 2140,\n" +
@@ -799,9 +798,9 @@ onEnable{
                    "      \"abilities.+=\": [\n" +
                    "        {\n" +
                    "          \"type\": \"SpawnDeathAbility\",\n" +
-                   "          \"amount\": 12,\n" +
+                   "          \"amount\": 28,\n" +
                    "          \"type\": \"arkyid\",\n" +
-                   "          \"spread\": 64\n" +
+                   "          \"spread\": 72\n" +
                    "        }\n" +
                    "      ],\n" +
                    "      \"armor\": 36\n" +
@@ -822,11 +821,11 @@ onEnable{
                    "      \"weapons.0.bullet.collidesAir\": true,\n" +
                    "      \"weapons.0.bullet.damage\": 150,\n" +
                    "      \"weapons.0.bullet.splashDamage\": 30,\n" +
-                   "      \"weapons.0.bullet.fragBullet.damage\": 17,\n" +
-                   "      \"weapons.0.bullet.fragBullet.splashDamage\": 7,\n" +
+                   "      \"weapons.0.bullet.fragBullet.damage\": 23,\n" +
+                   "      \"weapons.0.bullet.fragBullet.splashDamage\": 16,\n" +
                    "      \"abilities.+=\": [{\n" +
                    "          \"type\": \"UnitSpawnAbility\",\n" +
-                   "          \"spawnTime\": 1800,\n" +
+                   "          \"spawnTime\": 900,\n" +
                    "          \"unit\": \"flare\",\n" +
                    "          \"spawnX\": 0,\n" +
                    "          \"spawnY\": -8\n" +
@@ -836,8 +835,8 @@ onEnable{
                    "    },\n" +
                    "    \"flare\": {\n" +
                    "      \"health\": 10,\n" +
-                   "      \"fogRadius\": 64,\n" +
-                   "      \"speed\": 3.6\n" +
+                   "      \"fogRadius\": 48,\n" +
+                   "      \"speed\": 5.2\n" +
                    "    },\n" +
                    "    \"eclipse\": {\n" +
                    "      \"health\": 10600,\n" +
@@ -846,20 +845,20 @@ onEnable{
                    "          \"duration\": 120,\n" +
                    "          \"effect\": \"overclock\",\n" +
                    "          \"reload\": 100,\n" +
-                   "          \"range\": 80\n" +
+                   "          \"range\": 240\n" +
                    "        }\n" +
                    "      ],\n" +
                    "      \"armor\": 36\n" +
                    "    },\n" +
                    "    \"conquer\": {\n" +
-                   "      \"health\": 15800,\n" +
+                   "      \"health\": 12800,\n" +
                    "      \"flying\": true,\n" +
                    "      \"abilities.+=\": [{\n" +
                    "          \"type\": \"ForceFieldAbility\",\n" +
-                   "          \"radius\": 120,\n" +
-                   "          \"regen\": 1.25,\n" +
-                   "          \"max\": 8000,\n" +
-                   "          \"cooldown\": 120\n" +
+                   "          \"radius\": 200,\n" +
+                   "          \"regen\": 4.8,\n" +
+                   "          \"max\": 12000,\n" +
+                   "          \"cooldown\": 240\n" +
                    "        }\n" +
                    "      ],\n" +
                    "      \"armor\": 42\n" +
