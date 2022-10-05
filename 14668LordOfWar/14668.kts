@@ -281,6 +281,7 @@ fun Player.createLordUnit(core: CoreBuild,unitType: UnitType? = lordUnitType()):
             add()
             unit(unit)
             Call.announce("$name [#${team().color}]领主级单位\n!${unit.type.emoji()}出征${unit.type.emoji()}!")
+            Call.logicExplosion(team, x, y, 32f * 8f, 6000f, true, true, true)
             Call.effect(Fx.impactReactorExplosion, x, y, 0f, team().color)
         }
     }
@@ -299,11 +300,19 @@ suspend fun Player.cityMenu(core: CoreBuild) {
     ) {
         if(checkCooldown()){
             this += listOf("[green]收取资源" to {
-                val amount =  (core.coins() * if (unit().type != UnitTypes.alpha) Random.nextFloat() else Random.nextFloat() / 4).toInt()
-                addCoin(amount)
-                core.removeCoin(amount)
-                setCooldown((amount / max(Time.timeSinceMillis(startTime) / 1000 / 30, 1L) / core.level()).toFloat())
-                Call.transferItemEffect(Items.copper, core.x, core.y, unit())
+                if(checkCooldown()) {
+                    val amount =
+                        (core.coins() * if (unit().type != UnitTypes.alpha) Random.nextFloat() else Random.nextFloat() / 4).toInt()
+                    addCoin(amount)
+                    core.removeCoin(amount)
+                    setCooldown(
+                        (amount / max(
+                            Time.timeSinceMillis(startTime) / 1000 / 30,
+                            1L
+                        ) / core.level()).toFloat()
+                    )
+                    Call.transferItemEffect(Items.copper, core.x, core.y, unit())
+                }
             })
         }
         else{
@@ -311,26 +320,32 @@ suspend fun Player.cityMenu(core: CoreBuild) {
                 cityMenu(core)
             })
         }
-        if(core.coins() >= core.maxHealth && core.block != Blocks.coreAcropolis){
-            this += listOf("[cyan]可升级城池！\n[white]${Iconc.blockCliff}${core.maxHealth}" to {
-                if(core.coins() >= core.maxHealth){
-                    val cost = core.maxHealth.toInt()
-                    val coins = core.coins()
-                    val tile = core.tile
-                    val target = when(core.block){
-                        Blocks.coreShard -> Blocks.coreFoundation
-                        Blocks.coreFoundation -> Blocks.coreBastion
-                        Blocks.coreBastion -> Blocks.coreNucleus
-                        Blocks.coreNucleus -> Blocks.coreCitadel
-                        Blocks.coreCitadel -> Blocks.coreAcropolis
-                        else -> Blocks.coreShard
+        if(core.level() < 6) {
+            if (core.coins() >= core.maxHealth && core.block != Blocks.coreAcropolis) {
+                this += listOf("[cyan]可升级城池！\n[white]${Iconc.blockCliff}${core.maxHealth}" to {
+                    if (core.coins() >= core.maxHealth && core == (core.tile.build as CoreBuild)) {
+                        val cost = core.maxHealth.toInt()
+                        val coins = core.coins()
+                        val tile = core.tile
+                        val target = when (core.block) {
+                            Blocks.coreShard -> Blocks.coreFoundation
+                            Blocks.coreFoundation -> Blocks.coreBastion
+                            Blocks.coreBastion -> Blocks.coreNucleus
+                            Blocks.coreNucleus -> Blocks.coreCitadel
+                            Blocks.coreCitadel -> Blocks.coreAcropolis
+                            else -> Blocks.coreShard
+                        }
+                        tile.setNet(target, core.team, 0)
+                        (tile.build as CoreBuild).setCoin(coins - cost)
+                        (tile.build as CoreBuild).lord(uuid())
+                        Call.sendMessage("[#${core.team.color}]位于[${World.toTile(core.x)},${World.toTile(core.y)}]的 ${core.block.emoji()} 已经被[white] $name [#${core.team.color}]升级为 ${tile.build.block.emoji()}[white]${(tile.build as CoreBuild).levelText()}")
                     }
-                    tile.setNet(target, core.team, 0)
-                    (tile.build as CoreBuild).setCoin(coins - cost)
-                    (tile.build as CoreBuild).lord(uuid())
-                    Call.sendMessage("[#${core.team.color}]位于[${World.toTile(core.x)},${World.toTile(core.y)}]的 ${core.block.emoji()} 已经被[white] $name [#${core.team.color}]升级为 ${tile.build.block.emoji()}[white]${(tile.build as CoreBuild).levelText()}")
-                }
-            })
+                })
+            } else {
+                this += listOf("[lightgray]城池金币不足以升级城池！\n[white]${Iconc.blockCliff}${core.maxHealth}" to {
+                    cityMenu(core)
+                })
+            }
         }
         this += listOf(
             "军团" to {warMenu(core)},
@@ -370,9 +385,9 @@ suspend fun Player.warMenu(core: CoreBuild) {
                 }
             )
         }else{
-            if (coins() >= unitType().cost() * 5) {
                 this += listOf(
-                    "[red]军团不满意？\n重新抽取军团单位！\n[white]${Iconc.blockCliff}${unitType().cost() * 5}" to {
+                    (if (coins() >= unitType().cost() * 5) "[red]军团不满意？\n" + "重新抽取军团单位！\n" + "[white]${Iconc.blockCliff}${unitType().cost() * 5}"
+                    else "[lightgray]你需要[white]${Iconc.blockCliff}${unitType().cost() * 5}[lightgray]来重新抽取军团单位") to {
                         if (coins() >= unitType().cost() * 5) {
                             val randomUnit = unitType().levelUnits()!!.random()
                             unitType(randomUnit)
@@ -402,7 +417,6 @@ suspend fun Player.warMenu(core: CoreBuild) {
                             warMenu(core)
                         }
                 )
-            }
             this += listOf(
                 "${unitType()!!.emoji()}${Iconc.blockCliff}${unitType().cost()}${unitType()!!.emoji()}" to {
                     if (coins() >= unitType().cost()){
@@ -795,12 +809,19 @@ onEnable{
                    "    },\n" +
                    "    \"toxopid\": {\n" +
                    "      \"health\": 9800,\n" +
+                   "      \"weapons.0.shoot.shots\": 3,\n" +
+                   "      \"weapons.1.shoot.shots\": 3,\n" +
+                   "      \"weapons.0.bullet.damage\": 150,\n" +
+                   "      \"weapons.2.bullet.splashDamage\": 25,\n" +
+                   "      \"weapons.2.bullet.fragBullet.damage\": 15,\n" +
                    "      \"abilities.+=\": [\n" +
                    "        {\n" +
-                   "          \"type\": \"SpawnDeathAbility\",\n" +
-                   "          \"amount\": 28,\n" +
-                   "          \"type\": \"arkyid\",\n" +
-                   "          \"spread\": 72\n" +
+                   "          \"type\": \"RegenAbility\",\n" +
+                   "          \"percentAmount\": 0.027\n" +
+                   "        },\n" +
+                   "        {\n" +
+                   "          \"type\": \"SuppressionFieldAbility\",\n" +
+                   "          \"range\": 240\n" +
                    "        }\n" +
                    "      ],\n" +
                    "      \"armor\": 36\n" +
@@ -840,11 +861,19 @@ onEnable{
                    "    },\n" +
                    "    \"eclipse\": {\n" +
                    "      \"health\": 10600,\n" +
-                   "      \"abilities.+=\": [{\n" +
+                   "      \"abilities.+=\": [\n" +
+                   "        {\n" +
                    "          \"type\": \"StatusFieldAbility\",\n" +
-                   "          \"duration\": 120,\n" +
+                   "          \"duration\": 240,\n" +
                    "          \"effect\": \"overclock\",\n" +
-                   "          \"reload\": 100,\n" +
+                   "          \"reload\": 120,\n" +
+                   "          \"range\": 240\n" +
+                   "        },\n" +
+                   "        {\n" +
+                   "          \"type\": \"ShieldRegenFieldAbility\",\n" +
+                   "          \"amount\": 120,\n" +
+                   "          \"max\": 360,\n" +
+                   "          \"reload\": 240,\n" +
                    "          \"range\": 240\n" +
                    "        }\n" +
                    "      ],\n" +
@@ -853,12 +882,13 @@ onEnable{
                    "    \"conquer\": {\n" +
                    "      \"health\": 12800,\n" +
                    "      \"flying\": true,\n" +
-                   "      \"abilities.+=\": [{\n" +
+                   "      \"abilities.+=\": [\n" +
+                   "        {\n" +
                    "          \"type\": \"ForceFieldAbility\",\n" +
                    "          \"radius\": 200,\n" +
-                   "          \"regen\": 4.8,\n" +
-                   "          \"max\": 12000,\n" +
-                   "          \"cooldown\": 240\n" +
+                   "          \"regen\": 4.2,\n" +
+                   "          \"max\": 9600,\n" +
+                   "          \"cooldown\": 960\n" +
                    "        }\n" +
                    "      ],\n" +
                    "      \"armor\": 42\n" +
@@ -866,6 +896,7 @@ onEnable{
                    "  }\n" +
                    "}"
     )
+
     loop(Dispatchers.game){
         state.teams.getActive().forEach {
             it.cores.forEach { c ->
@@ -885,9 +916,10 @@ onEnable{
                     append(c.levelText())
                 }
                     Groups.player.filter { p ->
-                                p.within(c.x, c.y, 60f * 8f)
-                             || (world.tileWorld(p.mouseX, p.mouseY) != null
-                             && world.tileWorld(p.mouseX, p.mouseY).within(c.x, c.y, 30f * 8f))
+                               (p.within(c.x, c.y, 60f * 8f)
+                            || (world.tileWorld(p.mouseX, p.mouseY) != null
+                             && world.tileWorld(p.mouseX, p.mouseY).within(c.x, c.y, 30f * 8f)))
+                             && fogControl.isVisible(p.team(), c.x, c.y)
                     }.forEach { p ->
                         Call.label(p.con, text, 1.013f, c.x, c.y)
                     }

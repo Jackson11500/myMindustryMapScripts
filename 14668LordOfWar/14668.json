@@ -163,12 +163,19 @@
     },
     "toxopid": {
       "health": 9800,
+      "weapons.0.shoot.shots": 3,
+      "weapons.1.shoot.shots": 3,
+      "weapons.0.bullet.damage": 150,
+      "weapons.2.bullet.splashDamage": 25,
+      "weapons.2.bullet.fragBullet.damage": 15,
       "abilities.+=": [
         {
-          "type": "SpawnDeathAbility",
-          "amount": 28,
-          "type": "arkyid",
-          "spread": 72
+          "type": "RegenAbility",
+          "percentAmount": 0.027
+        },
+        {
+          "type": "SuppressionFieldAbility",
+          "range": 240
         }
       ],
       "armor": 36
@@ -208,11 +215,19 @@
     },
     "eclipse": {
       "health": 10600,
-      "abilities.+=": [{
+      "abilities.+=": [
+        {
           "type": "StatusFieldAbility",
-          "duration": 120,
+          "duration": 240,
           "effect": "overclock",
-          "reload": 100,
+          "reload": 120,
+          "range": 240
+        },
+        {
+          "type": "ShieldRegenFieldAbility",
+          "amount": 120,
+          "max": 360,
+          "reload": 240,
           "range": 240
         }
       ],
@@ -221,12 +236,13 @@
     "conquer": {
       "health": 12800,
       "flying": true,
-      "abilities.+=": [{
+      "abilities.+=": [
+        {
           "type": "ForceFieldAbility",
           "radius": 200,
-          "regen": 4.8,
-          "max": 12000,
-          "cooldown": 240
+          "regen": 4.2,
+          "max": 9600,
+          "cooldown": 960
         }
       ],
       "armor": 42
