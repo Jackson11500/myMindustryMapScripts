@@ -27,7 +27,7 @@
     "core-acropolis": {
       "unitType": "alpha",
       "health": 80000,
-      "armor": 20
+      "armor": 35
     }
   },
   "unit": {
