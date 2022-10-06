@@ -673,7 +673,7 @@ onEnable{
                    "    \"core-acropolis\": {\n" +
                    "      \"unitType\": \"alpha\",\n" +
                    "      \"health\": 80000,\n" +
-                   "      \"armor\": 20\n" +
+                   "      \"armor\": 35\n" +
                    "    }\n" +
                    "  },\n" +
                    "  \"unit\": {\n" +
